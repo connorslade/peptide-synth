@@ -14,6 +14,7 @@ define_refs! {
         AMINO_P,
 
         SELECTED,
+        GHOST,
 
         CONNECTOR_H,
         CONNECTOR_V
@@ -37,6 +38,7 @@ pub fn init(assets: &mut AssetConstructor) {
     assets.register_sprite(tiles, AMINO_P, (22, 0), (10, 11));
 
     assets.register_sprite(tiles, SELECTED, (22, 12), (10, 11));
+    assets.register_sprite(tiles, GHOST, (11, 12), (10, 11));
 
     assets.register_sprite(tiles, CONNECTOR_H, (0, 12), (2, 2));
     assets.register_sprite(tiles, CONNECTOR_V, (3, 12), (2, 2));

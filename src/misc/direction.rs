@@ -1,5 +1,6 @@
-use engine::exports::nalgebra::Vector2;
+use std::ops::BitOr;
 
+#[derive(Clone, Copy)]
 pub enum Direction {
     Up,
     Down,
@@ -7,17 +8,46 @@ pub enum Direction {
     Right,
 }
 
+#[derive(Clone, Copy)]
+pub struct Directions {
+    inner: u8,
+}
+
 impl Direction {
-    pub fn delta(&self) -> Vector2<i32> {
-        match self {
-            Direction::Up => Vector2::new(0, 1),
-            Direction::Down => Vector2::new(0, -1),
-            Direction::Left => Vector2::new(-1, 0),
-            Direction::Right => Vector2::new(1, 0),
-        }
-    }
+    pub const ALL: [Direction; 4] = [
+        Direction::Up,
+        Direction::Right,
+        Direction::Down,
+        Direction::Left,
+    ];
 
     pub fn horizontal(&self) -> bool {
         matches!(self, Direction::Left | Direction::Right)
+    }
+}
+
+impl Directions {
+    pub const fn empty() -> Self {
+        Self { inner: 0 }
+    }
+
+    pub const fn contains(&self, direction: Direction) -> bool {
+        self.inner & 1 << direction as u8 != 0
+    }
+
+    pub fn iter(self) -> impl Iterator<Item = Direction> {
+        Direction::ALL
+            .into_iter()
+            .filter(move |&x| self.contains(x))
+    }
+}
+
+impl BitOr<Direction> for Directions {
+    type Output = Self;
+
+    fn bitor(self, rhs: Direction) -> Self::Output {
+        Self {
+            inner: self.inner | 1 << rhs as u8,
+        }
     }
 }

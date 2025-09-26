@@ -1,12 +1,10 @@
 use engine::assets::SpriteRef;
 
-use crate::{assets, misc::direction::Direction};
+use crate::{assets, misc::direction::Directions};
 
 pub struct Amino {
     pub amino: AminoType,
-    pub pos: Direction,
-
-    pub children: Vec<Amino>,
+    pub children: Directions,
 }
 
 pub enum AminoType {

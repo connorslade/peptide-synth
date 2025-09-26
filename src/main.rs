@@ -1,6 +1,6 @@
 #![feature(decl_macro)]
 
-use std::collections::VecDeque;
+use std::collections::HashMap;
 
 use engine::{
     application::{Application, ApplicationArgs},
@@ -15,7 +15,7 @@ use crate::{
     amino::AminoType,
     assets::{CONNECTOR_H, CONNECTOR_V, SELECTED},
     consts::colors,
-    misc::direction::Direction,
+    misc::direction::{Direction, Directions},
 };
 
 mod amino;
@@ -29,45 +29,39 @@ fn main() {
         window_attributes: WindowAttributes::default(),
         asset_constructor: Box::new(assets::init),
         resumed: Box::new(|| {
-            let protein = Amino {
-                amino: AminoType::Arg,
-                pos: Direction::Down, // ignored
-                children: vec![Amino {
+            let mut protein = HashMap::new();
+            protein.insert(
+                Vector2::new(0, 0),
+                Amino {
+                    amino: AminoType::Arg,
+                    children: Directions::empty() | Direction::Left | Direction::Right,
+                },
+            );
+            protein.insert(
+                Vector2::new(-1, 0),
+                Amino {
                     amino: AminoType::Leu,
-                    pos: Direction::Right,
-                    children: vec![
-                        Amino {
-                            amino: AminoType::Pro,
-                            pos: Direction::Up,
-                            children: vec![],
-                        },
-                        Amino {
-                            amino: AminoType::Leu,
-                            pos: Direction::Down,
-                            children: vec![Amino {
-                                amino: AminoType::Pro,
-                                pos: Direction::Left,
-                                children: vec![],
-                            }],
-                        },
-                    ],
-                }],
-            };
+                    children: Directions::empty(),
+                },
+            );
+            protein.insert(
+                Vector2::new(1, 0),
+                Amino {
+                    amino: AminoType::Pro,
+                    children: Directions::empty(),
+                },
+            );
 
             Box::new(move |ctx| {
                 ctx.background(colors::BACKGROUND);
 
-                let mut queue = VecDeque::new();
-                queue.push_back((&protein, -protein.pos.delta()));
+                for (pos, amino) in protein.iter() {
+                    let pos = pos.map(|x| (x * 12 * 6) as f32);
 
-                while let Some((next, offset)) = queue.pop_front() {
-                    let offset = offset + next.pos.delta();
-                    let pos = offset.map(|x| (x * 12 * 6) as f32);
-
-                    let amino = Sprite::new(next.amino.asset())
+                    let sprite = Sprite::new(amino.amino.asset())
                         .scale(Vector2::repeat(6.0))
                         .position(ctx.center() + pos, Anchor::Center);
-                    if amino.is_hovered(ctx) {
+                    if sprite.is_hovered(ctx) {
                         ctx.window.cursor(CursorIcon::Pointer);
                         Sprite::new(SELECTED)
                             .scale(Vector2::repeat(6.0))
@@ -75,23 +69,21 @@ fn main() {
                             .z_index(1)
                             .draw(ctx);
                     }
-                    amino.draw(ctx);
+                    sprite.draw(ctx);
 
-                    for child in next.children.iter() {
-                        let connector_offset = match child.pos {
+                    for dir in amino.children.iter() {
+                        let connector_offset = match dir {
                             Direction::Up => Vector2::y() * 6.5,
                             Direction::Down => -Vector2::y() * 5.5,
                             Direction::Left => -Vector2::x() * 6.0,
                             Direction::Right => Vector2::x() * 6.0,
                         } * 6.0;
 
-                        Sprite::new([CONNECTOR_V, CONNECTOR_H][child.pos.horizontal() as usize])
+                        Sprite::new([CONNECTOR_V, CONNECTOR_H][dir.horizontal() as usize])
                             .scale(Vector2::repeat(6.0))
                             .position(ctx.center() + pos + connector_offset, Anchor::Center)
                             .z_index(2)
                             .draw(ctx);
-
-                        queue.push_back((child, offset));
                     }
                 }
             })
