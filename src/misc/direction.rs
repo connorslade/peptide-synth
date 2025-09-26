@@ -1,5 +1,7 @@
 use std::ops::BitOr;
 
+use engine::exports::nalgebra::Vector2;
+
 #[derive(Clone, Copy)]
 pub enum Direction {
     Up,
@@ -21,8 +23,27 @@ impl Direction {
         Direction::Left,
     ];
 
+    pub fn opposite(self) -> Direction {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
+
     pub fn horizontal(&self) -> bool {
         matches!(self, Direction::Left | Direction::Right)
+    }
+
+    pub fn from_delta(delta: Vector2<i32>) -> Option<Self> {
+        match delta.as_slice() {
+            [1, 0] => Some(Direction::Right),
+            [-1, 0] => Some(Direction::Left),
+            [0, 1] => Some(Direction::Up),
+            [0, -1] => Some(Direction::Down),
+            _ => None,
+        }
     }
 }
 
