@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 engine = { git = "https://github.com/connorslade/beam-time" }
+image = "0.25.8"
+ron = "0.11.0"
