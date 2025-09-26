@@ -11,7 +11,12 @@ define_refs! {
     SpriteRef => {
         AMINO_R,
         AMINO_L,
-        AMINO_P
+        AMINO_P,
+
+        SELECTED,
+
+        CONNECTOR_H,
+        CONNECTOR_V
     }
 }
 
@@ -30,6 +35,11 @@ pub fn init(assets: &mut AssetConstructor) {
     assets.register_sprite(tiles, AMINO_R, (0, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_L, (11, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_P, (22, 0), (10, 11));
+
+    assets.register_sprite(tiles, SELECTED, (22, 12), (10, 11));
+
+    assets.register_sprite(tiles, CONNECTOR_H, (0, 12), (2, 2));
+    assets.register_sprite(tiles, CONNECTOR_V, (3, 12), (2, 2));
 
     load_font(
         assets,
