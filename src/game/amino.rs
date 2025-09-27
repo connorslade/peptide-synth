@@ -2,6 +2,7 @@ use engine::assets::SpriteRef;
 
 use crate::{assets, misc::direction::Directions};
 
+#[derive(Clone, Copy)]
 pub struct Amino {
     pub amino: AminoType,
     pub children: Directions,
@@ -135,8 +136,6 @@ impl AminoType {
                 (AminoType::Phe, -0.2),
                 (AminoType::Cys, -0.2),
             ],
-
-            _ => &[],
         }
     }
 

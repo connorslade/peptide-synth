@@ -11,10 +11,10 @@ use engine::{
 use rand::{Rng, rng, seq::IndexedRandom};
 
 use crate::{
-    amino::AminoType,
     assets::{CAMPAIGN_BUTTON, QUIT_BUTTON, UNDEAD_FONT},
     components::button::ButtonExt,
     consts::SCREEN,
+    game::amino::AminoType,
     screens::Screen,
 };
 

@@ -10,10 +10,10 @@ use crate::{
     screens::{Screen, game::GameScreen, title::TitleScreen},
 };
 
-mod amino;
 mod assets;
 mod components;
 mod consts;
+mod game;
 mod misc;
 mod screens;
 
@@ -26,6 +26,7 @@ fn main() {
             let mut game = GameScreen::new();
 
             Box::new(move |ctx| {
+                ctx.window.vsync(true);
                 ctx.background(colors::BACKGROUND);
                 let screen = ctx.memory.get_or_insert(SCREEN, Screen::Title);
 
