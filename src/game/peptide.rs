@@ -11,7 +11,11 @@ use engine::{
 
 use crate::{
     assets::{CONNECTOR_H, CONNECTOR_V},
-    game::{amino::Amino, level::Level, world_to_screen},
+    game::{
+        amino::{Amino, AminoType},
+        level::Level,
+        world_to_screen,
+    },
     misc::direction::{Direction, Directions},
 };
 
@@ -20,6 +24,10 @@ pub struct Peptide {
 }
 
 impl Peptide {
+    pub fn get(&self, pos: Vector2<i32>) -> Option<&Amino> {
+        self.inner.get(&pos)
+    }
+
     pub fn remove(&mut self, pos: Vector2<i32>) {
         let mut queue = VecDeque::new();
         queue.push_back(pos);
@@ -30,7 +38,7 @@ impl Peptide {
             for dir in Direction::ALL {
                 let pos = next + dir.delta();
                 if let Some(child) = self.inner.get(&pos)
-                    && child.children.contains(dir.opposite())
+                    && child.parents.contains(dir.opposite())
                 {
                     queue.push_back(pos);
                 }
@@ -52,6 +60,61 @@ impl Peptide {
         Vector2::new(max.x - min.x + 1, max.y - min.y + 1).map(|x| x as u32)
     }
 
+    pub fn path(&self, pos: Vector2<i32>) -> Vec<AminoType> {
+        let mut queue = VecDeque::new();
+        queue.push_back((pos, Vec::new()));
+
+        while let Some((pos, mut history)) = queue.pop_front() {
+            if pos == Vector2::zeros() {
+                history.reverse();
+                return history;
+            }
+
+            let Some(amino) = self.inner.get(&pos) else {
+                continue;
+            };
+
+            for dir in amino.parents.iter() {
+                let pos = pos + dir.delta();
+                let mut history = history.clone();
+                history.push(amino.amino);
+                queue.push_back((pos, history));
+            }
+        }
+
+        vec![]
+    }
+
+    pub fn find(&self, path: &[AminoType]) -> Option<Vector2<i32>> {
+        let mut queue = VecDeque::new();
+        queue.push_back((Vector2::zeros(), Vec::new()));
+
+        while let Some((pos, history)) = queue.pop_front() {
+            if history == path {
+                return Some(pos);
+            }
+
+            if history.len() >= path.len() {
+                continue;
+            }
+
+            let Some(amino) = self.inner.get(&pos) else {
+                continue;
+            };
+
+            for dir in amino.parents.iter() {
+                let next_pos = pos + dir.delta();
+                if let Some(next_amino) = self.inner.get(&next_pos) {
+                    let mut new_history = history.clone();
+                    new_history.push(next_amino.amino);
+                    queue.push_back((next_pos, new_history));
+                }
+            }
+        }
+
+        None
+    }
+
     pub fn render(&self, ctx: &mut GraphicsContext, origin: Vector2<f32>) -> Option<Vector2<i32>> {
         let mut hover = None;
         for (pos, amino) in self.inner.iter() {
@@ -62,7 +125,7 @@ impl Peptide {
             sprite.is_hovered(ctx).then(|| hover = Some(*pos));
             sprite.draw(ctx);
 
-            for dir in amino.children.iter() {
+            for dir in amino.parents.iter() {
                 let connector_offset = match dir {
                     Direction::Up => Vector2::y() * 6.5,
                     Direction::Down => -Vector2::y() * 5.5,
@@ -86,7 +149,7 @@ impl Peptide {
     pub fn for_level(level: &Level) -> Self {
         let mut inner = HashMap::new();
         let mut amino = *level.peptide.inner.get(&Vector2::zeros()).unwrap();
-        amino.children = Directions::empty();
+        amino.parents = Directions::empty();
         inner.insert(Vector2::zeros(), amino);
         Self { inner }
     }
@@ -107,7 +170,7 @@ pub macro peptide($($aa:ident at ($x:expr, $y:expr) $(-> ($($dir:ident),*))?),* 
             Vector2::new($x, $y),
             Amino {
                 amino: AminoType::$aa,
-                children: Directions::empty()$($(| Direction::$dir.into())*)?,
+                parents: Directions::empty()$($(| Direction::$dir.into())*)?,
             }
         );
     )*

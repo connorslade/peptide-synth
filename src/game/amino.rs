@@ -5,10 +5,10 @@ use crate::{assets, misc::direction::Directions};
 #[derive(Clone, Copy)]
 pub struct Amino {
     pub amino: AminoType,
-    pub children: Directions,
+    pub parents: Directions,
 }
 
-#[derive(Hash, Clone, Copy)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum AminoType {
     Ala, // A
     Cys, // C

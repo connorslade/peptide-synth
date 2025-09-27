@@ -1,4 +1,7 @@
-use std::collections::hash_map::Entry;
+use std::{
+    collections::hash_map::Entry,
+    f32::consts::{PI, TAU},
+};
 
 use engine::{
     color::Rgb,
@@ -32,7 +35,7 @@ pub struct GameScreen {
     peptide: Peptide,
     level: Level,
 
-    selected: Option<Vector2<i32>>,
+    selected: Option<(Vector2<i32>, u8)>,
 }
 
 impl GameScreen {
@@ -64,10 +67,6 @@ impl GameScreen {
             layout.nest(ctx, ColumnLayout::new(8.0), |ctx, layout| {
                 for acid in AminoType::ALL {
                     let tracker = LayoutTracker::new(memory_key!(&acid));
-                    tracker
-                        .hovered(ctx)
-                        .then(|| ctx.window.cursor(CursorIcon::Pointer));
-
                     RowLayout::new(16.0)
                         .justify(Justify::Center)
                         .tracked(tracker)
@@ -94,16 +93,24 @@ impl GameScreen {
 
         let mut remove = None;
 
-        self.level.render(ctx);
+        let level_origin = self.level.render(ctx);
         let hover = self.peptide.render(ctx, ctx.center());
         if let Some(pos) = hover
             && self.selected.is_none()
         {
+            let path = self.peptide.path(pos);
+            if let Some(level) = self.level.peptide.find(&path) {
+                Sprite::new(SELECTED)
+                    .scale(Vector2::repeat(6.0))
+                    .position(level_origin + world_to_screen(level), Anchor::Center)
+                    .draw(ctx);
+            }
+
             let (left, right) = (
                 ctx.input.mouse_pressed(MouseButton::Left),
                 ctx.input.mouse_pressed(MouseButton::Right),
             );
-            left.then(|| self.selected = Some(pos));
+            left.then(|| self.selected = Some((pos, 0)));
             right.then(|| remove = Some(pos));
 
             ctx.window.cursor(CursorIcon::Pointer);
@@ -125,7 +132,55 @@ impl GameScreen {
             }
         }
 
-        if let Some(selected) = self.selected {
+        if let Some((selected, next_idx)) = self.selected {
+            let path = self.peptide.path(selected);
+            let Some(level_pos) = self.level.peptide.find(&path) else {
+                self.selected = None;
+                return;
+            };
+
+            Sprite::new(SELECTED)
+                .scale(Vector2::repeat(6.0))
+                .position(level_origin + world_to_screen(level_pos), Anchor::Center)
+                .draw(ctx);
+
+            let level = self.level.get(level_pos).unwrap();
+            let Some(next_dir) = level.parents.iter().skip(next_idx as usize).next() else {
+                self.selected = None;
+                return;
+            };
+            let next_pos = level_pos + next_dir.delta();
+            let next = self.level.get(next_pos).unwrap();
+
+            // abort if selected is already connected to the max number of this type of amino
+            let max = level
+                .parents
+                .iter()
+                .filter(|x| {
+                    self.level.get(level_pos + x.delta()).map(|x| x.amino) == Some(next.amino)
+                })
+                .count();
+
+            let current = Direction::ALL
+                .iter()
+                .filter(|x| {
+                    let Some(child) = self.peptide.get(selected + x.delta()) else {
+                        return false;
+                    };
+                    child.parents.contains(x.opposite()) && child.amino == next.amino
+                })
+                .count();
+
+            if current >= max {
+                self.selected = None;
+                return;
+            }
+
+            Sprite::new(GHOST)
+                .scale(Vector2::repeat(6.0))
+                .position(level_origin + world_to_screen(next_pos), Anchor::Center)
+                .draw(ctx);
+
             let dir = ((ctx.input.mouse() - ctx.center()) / 72.0 - selected.map(|x| x as f32))
                 .map(|x| x.round() as i32);
             let dir = if dir.x.abs() > dir.y.abs() {
@@ -147,8 +202,8 @@ impl GameScreen {
                 if clicked {
                     let direction = Direction::from_delta(dir).unwrap().opposite();
                     let amino = Amino {
-                        amino: AminoType::Arg,
-                        children: Directions::empty() | direction,
+                        amino: next.amino,
+                        parents: Directions::empty() | direction,
                     };
                     e.insert(amino);
                 }
