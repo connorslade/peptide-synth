@@ -17,7 +17,12 @@ use crate::{
 };
 
 impl GameScreen {
-    pub fn selection(&mut self, ctx: &mut GraphicsContext, level_origin: Vector2<f32>) {
+    pub fn selection(
+        &mut self,
+        ctx: &mut GraphicsContext,
+        origin: Vector2<f32>,
+        level_origin: Vector2<f32>,
+    ) {
         let delta = ctx.input.scroll_delta() as i8;
         if delta > 0 {
             self.child_idx = (self.child_idx + 1) % 3;
@@ -55,7 +60,7 @@ impl GameScreen {
                 continue;
             }
 
-            self.render_ghost(ctx, level_origin, next_pos, selected, *next);
+            self.render_ghost(ctx, origin, level_origin, next_pos, selected, *next);
             return;
         }
 
@@ -65,6 +70,7 @@ impl GameScreen {
     fn render_ghost(
         &mut self,
         ctx: &mut GraphicsContext,
+        origin: Vector2<f32>,
         level_origin: Vector2<f32>,
         next_pos: Vector2<i32>,
         selected: Vector2<i32>,
@@ -75,7 +81,7 @@ impl GameScreen {
             .position(level_origin + world_to_screen(next_pos), Anchor::Center)
             .draw(ctx);
 
-        let dir = ((ctx.input.mouse() - ctx.center()) / 72.0 - selected.map(|x| x as f32))
+        let dir = ((ctx.input.mouse() - origin) / 72.0 - selected.map(|x| x as f32))
             .map(|x| x.round() as i32);
         let dir = if dir.x.abs() > dir.y.abs() {
             Vector2::new(dir.x.signum(), 0)
@@ -90,11 +96,11 @@ impl GameScreen {
             let render_pos = world_to_screen(child);
             Sprite::new(next.amino.asset())
                 .scale(Vector2::repeat(6.0))
-                .position(ctx.center() + render_pos, Anchor::Center)
+                .position(origin + render_pos, Anchor::Center)
                 .draw(ctx);
             Sprite::new(GHOST)
                 .scale(Vector2::repeat(6.0))
-                .position(ctx.center() + render_pos, Anchor::Center)
+                .position(origin + render_pos, Anchor::Center)
                 .z_index(1)
                 .draw(ctx);
 

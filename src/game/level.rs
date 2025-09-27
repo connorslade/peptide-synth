@@ -17,9 +17,7 @@ impl Level {
     }
 
     pub fn render(&self, ctx: &mut GraphicsContext) -> Vector2<f32> {
-        let size = (self.peptide.size() * 12 * 6).map(|x| x as f32);
-        let center = Vector2::new(5.0 * 6.0 - size.x / 2.0, 0.0);
-        let pos = center + Vector2::new(ctx.center().x, size.y / 2.0 + 16.0);
+        let pos = self.peptide.offset_goal() + Vector2::new(ctx.center().x, 16.0);
         self.peptide.render(ctx, pos);
         pos
     }

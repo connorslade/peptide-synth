@@ -1,5 +1,3 @@
-use std::f32::EPSILON;
-
 use engine::{
     color::Rgb,
     drawable::{Anchor, Drawable, spacer::Spacer, sprite::Sprite, text::Text},
@@ -15,6 +13,7 @@ use engine::{
 use crate::{
     assets::{SCORE_ARROW, SCORE_BAR, UNDEAD_FONT},
     game::amino::AminoType,
+    misc::exp_decay,
     screens::game::GameScreen,
 };
 
@@ -34,10 +33,13 @@ impl GameScreen {
 
             let energy = self.peptide.score();
             let score = energy / -4.4;
+            let offset_goal = score * 60.0 * 6.0;
 
+            let offset = ctx.memory.get_or_insert(memory_key!(), offset_goal);
+            *offset = exp_decay(*offset, offset_goal, 10.0, ctx.delta_time);
             Sprite::new(SCORE_ARROW)
-                .scale(Vector2::repeat(6.0))
-                .position(Vector2::x() * score * 60.0 * 6.0, Anchor::BottomLeft)
+                .scale(Vector2::repeat(4.0))
+                .position(Vector2::x() * *offset, Anchor::BottomLeft)
                 .no_padding()
                 .layout(ctx, layout);
             Spacer::new_y(6.0).no_padding().layout(ctx, layout);
@@ -48,7 +50,7 @@ impl GameScreen {
                         .scale(Vector2::repeat(6.0))
                         .layout(ctx, layout);
 
-                    let duration = 10.0 * score + EPSILON;
+                    let duration = 10.0 * score + f32::EPSILON;
                     Text::new(UNDEAD_FONT, format!("{duration:.1} years"))
                         .scale(Vector2::repeat(3.0))
                         .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))

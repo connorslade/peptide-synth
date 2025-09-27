@@ -10,6 +10,7 @@ use engine::{
 use crate::{
     assets::{SELECTED, include_asset},
     game::{level::Level, peptide::Peptide, world_to_screen},
+    misc::exp_decay,
 };
 
 mod interface;
@@ -18,6 +19,9 @@ mod selection;
 pub struct GameScreen {
     peptide: Peptide,
     level: Level,
+
+    pan: Vector2<f32>,
+    offset: Vector2<f32>,
 
     child_idx: u8,
     selected: Option<Vector2<i32>>,
@@ -31,6 +35,9 @@ impl GameScreen {
             peptide: Peptide::for_level(&level),
             level,
 
+            pan: Vector2::zeros(),
+            offset: Vector2::zeros(),
+
             child_idx: 0,
             selected: None,
         }
@@ -39,9 +46,19 @@ impl GameScreen {
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
         self.interface(ctx);
 
+        if ctx.input.mouse_down(MouseButton::Middle) {
+            ctx.window.cursor(CursorIcon::Move);
+            self.pan += ctx.input.mouse_delta();
+        }
+
+        let offset_goal = self.peptide.offset_goal();
+        self.offset.x = exp_decay(self.offset.x, offset_goal.x, 10.0, ctx.delta_time);
+        self.offset.y = exp_decay(self.offset.y, -offset_goal.y, 10.0, ctx.delta_time);
+        let origin = ctx.center() + self.offset + self.pan;
+
         // Render the board and level peptides
+        let hover = self.peptide.render(ctx, origin);
         let level_origin = self.level.render(ctx);
-        let hover = self.peptide.render(ctx, ctx.center());
 
         let mut remove = None;
         if let Some(pos) = hover
@@ -65,7 +82,7 @@ impl GameScreen {
             ctx.window.cursor(CursorIcon::Pointer);
             Sprite::new(SELECTED)
                 .scale(Vector2::repeat(6.0))
-                .position(ctx.center() + world_to_screen(pos), Anchor::Center)
+                .position(origin + world_to_screen(pos), Anchor::Center)
                 .z_index(1)
                 .draw(ctx);
         }
@@ -74,6 +91,6 @@ impl GameScreen {
             self.peptide.remove(pos);
         }
 
-        self.selection(ctx, level_origin);
+        self.selection(ctx, origin, level_origin);
     }
 }

@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    i32,
-};
+use std::collections::{HashMap, VecDeque};
 
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
@@ -188,6 +185,11 @@ impl Peptide {
         }
 
         hover
+    }
+
+    pub fn offset_goal(&self) -> Vector2<f32> {
+        let size = (self.size() * 12 * 6).map(|x| x as f32);
+        Vector2::new(5.0 * 6.0 - size.x / 2.0, size.y / 2.0)
     }
 }
 
