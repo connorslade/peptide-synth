@@ -1,5 +1,4 @@
 use engine::{
-    color::Rgb,
     drawable::{Anchor, Drawable},
     drawable::{sprite::Sprite, text::Text},
     exports::{
@@ -22,12 +21,8 @@ struct ButtonState {
 }
 
 pub trait ButtonContent: Drawable + LayoutElement {
-    fn position(self, position: Vector2<f32>, anchor: Anchor) -> Self;
     fn dynamic_scale(self, scale: Vector2<f32>, anchor: Anchor) -> Self;
-    fn color(self, color: impl Into<Rgb<f32>>) -> Self;
-
     fn get_scale(&self) -> Vector2<f32>;
-    fn get_color(&self) -> Rgb<f32>;
 }
 
 pub trait ButtonExt
@@ -87,46 +82,22 @@ impl<T: ButtonContent + 'static> LayoutElement for Button<T> {
 }
 
 impl ButtonContent for Sprite {
-    fn position(self, position: Vector2<f32>, anchor: Anchor) -> Self {
-        self.position(position, anchor)
-    }
-
     fn dynamic_scale(self, scale: Vector2<f32>, anchor: Anchor) -> Self {
         self.dynamic_scale(scale, anchor)
     }
 
-    fn color(self, color: impl Into<Rgb<f32>>) -> Self {
-        self.color(color)
-    }
-
     fn get_scale(&self) -> Vector2<f32> {
         self.get_scale()
-    }
-
-    fn get_color(&self) -> Rgb<f32> {
-        self.get_color()
     }
 }
 
 impl ButtonContent for Text {
-    fn position(self, position: Vector2<f32>, anchor: Anchor) -> Self {
-        self.position(position, anchor)
-    }
-
     fn dynamic_scale(self, scale: Vector2<f32>, anchor: Anchor) -> Self {
         self.dynamic_scale(scale, anchor)
     }
 
-    fn color(self, color: impl Into<Rgb<f32>>) -> Self {
-        self.color(color)
-    }
-
     fn get_scale(&self) -> Vector2<f32> {
         self.get_scale()
-    }
-
-    fn get_color(&self) -> Rgb<f32> {
-        self.get_color()
     }
 }
 

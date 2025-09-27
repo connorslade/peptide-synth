@@ -11,7 +11,6 @@ use crate::{
 };
 
 mod assets;
-mod components;
 mod consts;
 mod game;
 mod misc;

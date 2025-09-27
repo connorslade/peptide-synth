@@ -30,8 +30,8 @@ define_refs! {
     }
 }
 
-macro include_asset($name:expr) {
-    include_bytes!(concat!("../assets/", $name))
+pub macro include_asset($name:expr) {
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/", $name))
 }
 
 macro include_atlas($name:expr) {

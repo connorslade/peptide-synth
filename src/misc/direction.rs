@@ -66,7 +66,7 @@ impl Directions {
         self.inner & 1 << direction as u8 != 0
     }
 
-    pub fn iter(self) -> impl Iterator<Item = Direction> {
+    pub fn iter(self) -> impl Iterator<Item = Direction> + Clone {
         Direction::ALL
             .into_iter()
             .filter(move |&x| self.contains(x))

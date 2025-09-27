@@ -39,6 +39,11 @@ impl Peptide {
     }
 
     pub fn remove(&mut self, pos: Vector2<i32>) {
+        if pos == Vector2::zeros() {
+            (Direction::ALL.iter()).for_each(|dir| self.remove(pos + dir.delta()));
+            return;
+        }
+
         let mut queue = VecDeque::new();
         queue.push_back(pos);
 
@@ -134,15 +139,13 @@ impl Peptide {
                     continue;
                 };
 
-                let adjacency = amino.amino.adjacency();
-                if let Some((_, bouns)) = adjacency.iter().find(|x| x.0 == neighbor.amino)
-                    && !neighbor.children.contains(dir.opposite())
-                    && !amino.children.contains(dir)
-                {
-                    energy += bouns / 2.0;
+                if !neighbor.children.contains(dir.opposite()) && !amino.children.contains(dir) {
+                    energy += amino.amino.hydrophobic();
+                    let adjacency = amino.amino.adjacency();
+                    if let Some((_, bouns)) = adjacency.iter().find(|x| x.0 == neighbor.amino) {
+                        energy += bouns / 2.0;
+                    }
                 }
-
-                energy += amino.amino.hydrophobic();
             }
 
             // electrostatics, q₁q₂/r

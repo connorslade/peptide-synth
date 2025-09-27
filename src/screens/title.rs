@@ -12,9 +12,9 @@ use rand::{Rng, rng, seq::IndexedRandom};
 
 use crate::{
     assets::{CAMPAIGN_BUTTON, QUIT_BUTTON, UNDEAD_FONT},
-    components::button::ButtonExt,
     consts::SCREEN,
     game::amino::AminoType,
+    misc::button::ButtonExt,
     screens::Screen,
 };
 

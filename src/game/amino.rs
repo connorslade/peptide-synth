@@ -59,17 +59,17 @@ impl AminoType {
         let charge = self.charge();
         let adjacency = self.adjacency();
 
+        let hydrophobic = if self.hydrophobic() < 0.0 {
+            "δ∙"
+        } else {
+            "Ψ∙"
+        };
         let charge = if charge == 0 {
             ""
         } else if charge > 0 {
             "+∙"
         } else {
             "-∙"
-        };
-        let hydrophobic = if self.hydrophobic() < 0.0 {
-            "δ∙"
-        } else {
-            ""
         };
         let adjacency = if adjacency.is_empty() {
             ""
@@ -82,7 +82,7 @@ impl AminoType {
             &format!("{}∙", letters.iter().collect::<String>())
         };
 
-        let mut desc = format!("{charge}{hydrophobic}{adjacency}");
+        let mut desc = format!("{hydrophobic}{charge}{adjacency}");
         let _ = desc.pop();
         desc
     }
@@ -151,7 +151,8 @@ impl AminoType {
             AminoType::Leu => -0.6,
             AminoType::Phe => -0.6,
             AminoType::Cys => -0.2,
-            _ => 0.0,
+            AminoType::Asp => 0.3,
+            AminoType::Arg => 0.4,
         }
     }
 }
