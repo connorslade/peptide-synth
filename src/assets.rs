@@ -9,6 +9,9 @@ define_refs! {
         UNDEAD_FONT
     },
     SpriteRef => {
+        CAMPAIGN_BUTTON,
+        QUIT_BUTTON,
+
         AMINO_R,
         AMINO_L,
         AMINO_A,
@@ -36,6 +39,9 @@ macro include_atlas($name:expr) {
 
 pub fn init(assets: &mut AssetConstructor) {
     let tiles = assets.register_atlas(include_atlas!("tiles.png"));
+    assets.register_sprite(tiles, CAMPAIGN_BUTTON, (33, 0), (44, 12));
+    assets.register_sprite(tiles, QUIT_BUTTON, (33, 13), (23, 12));
+
     assets.register_sprite(tiles, AMINO_R, (0, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_L, (11, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_A, (22, 0), (10, 11));

@@ -14,13 +14,10 @@ use engine::{
     },
     memory_key,
 };
-use image::Pixel;
 
 use crate::{
     amino::{Amino, AminoType},
     assets::{CONNECTOR_H, CONNECTOR_V, GHOST, SELECTED, UNDEAD_FONT},
-    consts::colors,
-    image::Image,
     misc::direction::{Direction, Directions},
 };
 
@@ -81,8 +78,6 @@ impl GameScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
-        ctx.background(colors::BACKGROUND);
-
         let mut root = RootLayout::new(Vector2::new(16.0, ctx.size().y - 16.0), Anchor::TopLeft);
         root.nest(ctx, ColumnLayout::new(16.0), |ctx, layout| {
             Text::new(UNDEAD_FONT, "Level One")
@@ -110,19 +105,20 @@ impl GameScreen {
                             Sprite::new(acid.asset())
                                 .scale(Vector2::repeat(6.0))
                                 .layout(ctx, layout);
-                            Text::new(UNDEAD_FONT, acid.desc())
-                                .scale(Vector2::repeat(3.0))
-                                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-                                .layout(ctx, layout);
+                            ColumnLayout::new(12.0).show(ctx, layout, |ctx, layout| {
+                                Text::new(UNDEAD_FONT, acid.name())
+                                    .scale(Vector2::repeat(3.0))
+                                    .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                                    .layout(ctx, layout);
+                                Text::new(UNDEAD_FONT, acid.desc())
+                                    .scale(Vector2::repeat(3.0))
+                                    .color(Rgb::hex(0x847e87))
+                                    .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                                    .layout(ctx, layout);
+                            });
                         });
                 }
             });
-
-            Spacer::new_y(16.0).layout(ctx, layout);
-            Text::new(UNDEAD_FONT, "δ Hydrophobic\nΩ Polar\n ± Charge")
-                .scale(Vector2::repeat(3.0))
-                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-                .layout(ctx, layout);
         });
 
         root.draw(ctx);

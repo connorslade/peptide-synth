@@ -7,7 +7,7 @@ pub struct Amino {
     pub children: Directions,
 }
 
-#[derive(Hash)]
+#[derive(Hash, Clone, Copy)]
 pub enum AminoType {
     Ala, // A
     Cys, // C
@@ -76,7 +76,7 @@ impl AminoType {
             &format!("{}∙", letters.iter().collect::<String>())
         };
 
-        let mut desc = format!("{}\n{charge}{hydrophobic}{adjacency}", self.name());
+        let mut desc = format!("{charge}{hydrophobic}{adjacency}");
         let _ = desc.pop();
         desc
     }

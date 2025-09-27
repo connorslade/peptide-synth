@@ -1,3 +1,7 @@
+use engine::{memory::MemoryKey, memory_key};
+
+pub const SCREEN: MemoryKey = memory_key!();
+
 pub mod colors {
     use engine::color::Rgb;
 
