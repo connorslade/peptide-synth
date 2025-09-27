@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
@@ -52,18 +52,40 @@ impl GameScreen {
         }
     }
 
+    fn remove(&mut self, pos: Vector2<i32>) {
+        let mut queue = VecDeque::new();
+        queue.push_back(pos);
+
+        while let Some(next) = queue.pop_front() {
+            self.protein.remove(&next);
+
+            for dir in Direction::ALL {
+                let pos = next + dir.delta();
+                if let Some(child) = self.protein.get(&pos)
+                    && child.children.contains(dir.opposite())
+                {
+                    queue.push_back(pos);
+                }
+            }
+        }
+    }
+
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
         ctx.background(colors::BACKGROUND);
 
+        let mut remove = None;
         for (pos, amino) in self.protein.iter() {
             let render_pos = world_to_screen(*pos);
             let sprite = Sprite::new(amino.amino.asset())
                 .scale(Vector2::repeat(6.0))
                 .position(ctx.center() + render_pos, Anchor::Center);
             if sprite.is_hovered(ctx) {
-                ctx.input
-                    .mouse_pressed(MouseButton::Left)
-                    .then(|| self.selected = Some(*pos));
+                if ctx.input.mouse_pressed(MouseButton::Left) {
+                    self.selected = Some(*pos)
+                }
+                if ctx.input.mouse_pressed(MouseButton::Right) {
+                    remove = Some(*pos)
+                }
 
                 ctx.window.cursor(CursorIcon::Pointer);
                 Sprite::new(SELECTED)
@@ -88,6 +110,10 @@ impl GameScreen {
                     .z_index(2)
                     .draw(ctx);
             }
+        }
+
+        if let Some(pos) = remove {
+            self.remove(pos);
         }
 
         if let Some(selected) = self.selected {
