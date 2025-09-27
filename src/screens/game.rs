@@ -1,20 +1,26 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, VecDeque, hash_map::Entry};
 
 use engine::{
-    drawable::{Anchor, Drawable, sprite::Sprite},
+    color::Rgb,
+    drawable::{Anchor, Drawable, spacer::Spacer, sprite::Sprite, text::Text},
     exports::{
         nalgebra::Vector2,
         winit::{event::MouseButton, window::CursorIcon},
     },
     graphics_context::GraphicsContext,
+    layout::{
+        LayoutElement, LayoutMethods, column::ColumnLayout, root::RootLayout, row::RowLayout,
+    },
 };
 
 use crate::{
     amino::{Amino, AminoType},
-    assets::{CONNECTOR_H, CONNECTOR_V, GHOST, SELECTED},
+    assets::{CONNECTOR_H, CONNECTOR_V, GHOST, SELECTED, UNDEAD_FONT},
     consts::colors,
     misc::direction::{Direction, Directions},
 };
+
+const DUMMY_DESCRIPTION: &str = "This is a very simple peptide, only consisting of three amino acids. The two charged amino acids should be kept as far apart as possible.";
 
 pub struct GameScreen {
     protein: HashMap<Vector2<i32>, Amino>,
@@ -41,7 +47,7 @@ impl GameScreen {
         protein.insert(
             Vector2::new(1, 0),
             Amino {
-                amino: AminoType::Pro,
+                amino: AminoType::Ala,
                 children: Directions::empty(),
             },
         );
@@ -72,6 +78,50 @@ impl GameScreen {
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
         ctx.background(colors::BACKGROUND);
+
+        let mut root = RootLayout::new(Vector2::new(16.0, ctx.size().y - 16.0), Anchor::TopLeft);
+        root.nest(ctx, ColumnLayout::new(16.0), |ctx, layout| {
+            Text::new(UNDEAD_FONT, "Level One")
+                .scale(Vector2::repeat(6.0))
+                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                .layout(ctx, layout);
+            Text::new(UNDEAD_FONT, DUMMY_DESCRIPTION)
+                .scale(Vector2::repeat(2.0))
+                .max_width(ctx.size().x / 3.0)
+                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                .layout(ctx, layout);
+            Spacer::new_y(16.0).layout(ctx, layout);
+
+            layout.nest(ctx, ColumnLayout::new(8.0), |ctx, layout| {
+                for acid in AminoType::ALL {
+                    layout.nest(ctx, RowLayout::new(16.0), |ctx, layout| {
+                        Sprite::new(acid.asset())
+                            .scale(Vector2::repeat(6.0))
+                            .layout(ctx, layout);
+                        let charge = acid.charge();
+                        Text::new(
+                            UNDEAD_FONT,
+                            format!(
+                                "{}\n{}∙Ω∙δ",
+                                acid.name(),
+                                if charge == 0.0 {
+                                    "0"
+                                } else if charge > 0.0 {
+                                    "+"
+                                } else {
+                                    "-"
+                                }
+                            ),
+                        )
+                        .scale(Vector2::repeat(3.0))
+                        .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                        .layout(ctx, layout);
+                    });
+                }
+            });
+        });
+
+        root.draw(ctx);
 
         let mut remove = None;
         for (pos, amino) in self.protein.iter() {
@@ -128,7 +178,7 @@ impl GameScreen {
             let child = selected + dir;
             let clicked = ctx.input.mouse_pressed(MouseButton::Left);
             (clicked && child != selected).then(|| self.selected = None);
-            if !self.protein.contains_key(&child) {
+            if let Entry::Vacant(e) = self.protein.entry(child) {
                 let render_pos = world_to_screen(child);
                 Sprite::new(GHOST)
                     .scale(Vector2::repeat(6.0))
@@ -141,7 +191,7 @@ impl GameScreen {
                         amino: AminoType::Arg,
                         children: Directions::empty() | direction,
                     };
-                    self.protein.insert(child, amino);
+                    e.insert(amino);
                 }
             }
         }
