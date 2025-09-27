@@ -10,6 +10,7 @@ use crate::screens::game::GameScreen;
 mod amino;
 mod assets;
 mod consts;
+mod image;
 mod misc;
 mod screens;
 

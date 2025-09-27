@@ -9,14 +9,18 @@ use engine::{
     },
     graphics_context::GraphicsContext,
     layout::{
-        LayoutElement, LayoutMethods, column::ColumnLayout, root::RootLayout, row::RowLayout,
+        Justify, LayoutElement, LayoutMethods, column::ColumnLayout, root::RootLayout,
+        row::RowLayout, tracker::LayoutTracker,
     },
+    memory_key,
 };
+use image::Pixel;
 
 use crate::{
     amino::{Amino, AminoType},
     assets::{CONNECTOR_H, CONNECTOR_V, GHOST, SELECTED, UNDEAD_FONT},
     consts::colors,
+    image::Image,
     misc::direction::{Direction, Directions},
 };
 
@@ -87,38 +91,38 @@ impl GameScreen {
                 .layout(ctx, layout);
             Text::new(UNDEAD_FONT, DUMMY_DESCRIPTION)
                 .scale(Vector2::repeat(2.0))
-                .max_width(ctx.size().x / 3.0)
+                .max_width(480.0)
                 .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
                 .layout(ctx, layout);
             Spacer::new_y(16.0).layout(ctx, layout);
 
             layout.nest(ctx, ColumnLayout::new(8.0), |ctx, layout| {
                 for acid in AminoType::ALL {
-                    layout.nest(ctx, RowLayout::new(16.0), |ctx, layout| {
-                        Sprite::new(acid.asset())
-                            .scale(Vector2::repeat(6.0))
-                            .layout(ctx, layout);
-                        let charge = acid.charge();
-                        Text::new(
-                            UNDEAD_FONT,
-                            format!(
-                                "{}\n{}∙Ω∙δ",
-                                acid.name(),
-                                if charge == 0.0 {
-                                    "0"
-                                } else if charge > 0.0 {
-                                    "+"
-                                } else {
-                                    "-"
-                                }
-                            ),
-                        )
-                        .scale(Vector2::repeat(3.0))
-                        .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-                        .layout(ctx, layout);
-                    });
+                    let tracker = LayoutTracker::new(memory_key!(&acid));
+                    tracker
+                        .hovered(ctx)
+                        .then(|| ctx.window.cursor(CursorIcon::Pointer));
+
+                    RowLayout::new(16.0)
+                        .justify(Justify::Center)
+                        .tracked(tracker)
+                        .show(ctx, layout, |ctx, layout| {
+                            Sprite::new(acid.asset())
+                                .scale(Vector2::repeat(6.0))
+                                .layout(ctx, layout);
+                            Text::new(UNDEAD_FONT, acid.desc())
+                                .scale(Vector2::repeat(3.0))
+                                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                                .layout(ctx, layout);
+                        });
                 }
             });
+
+            Spacer::new_y(16.0).layout(ctx, layout);
+            Text::new(UNDEAD_FONT, "δ Hydrophobic\nΩ Polar\n ± Charge")
+                .scale(Vector2::repeat(3.0))
+                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                .layout(ctx, layout);
         });
 
         root.draw(ctx);

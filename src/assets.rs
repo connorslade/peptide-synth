@@ -14,7 +14,7 @@ define_refs! {
         AMINO_A,
         AMINO_C,
         AMINO_D,
-        AMINO_E,
+        AMINO_F,
 
         SELECTED,
         GHOST,
@@ -41,7 +41,7 @@ pub fn init(assets: &mut AssetConstructor) {
     assets.register_sprite(tiles, AMINO_A, (22, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_C, (0, 12), (10, 11));
     assets.register_sprite(tiles, AMINO_D, (11, 12), (10, 11));
-    assets.register_sprite(tiles, AMINO_E, (22, 12), (10, 11));
+    assets.register_sprite(tiles, AMINO_F, (22, 12), (10, 11));
 
     assets.register_sprite(tiles, SELECTED, (22, 24), (10, 11));
     assets.register_sprite(tiles, GHOST, (11, 24), (10, 11));
