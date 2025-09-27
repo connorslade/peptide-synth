@@ -26,8 +26,6 @@ use crate::{
     misc::direction::{Direction, Directions},
 };
 
-const DUMMY_DESCRIPTION: &str = "This is a very simple peptide, only consisting of three amino acids. The two charged amino acids should be kept as far apart as possible.";
-
 pub struct GameScreen {
     peptide: Peptide,
     level: Level,
@@ -37,7 +35,7 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = Level::example();
+        let level = ron::from_str(include_str!("../../assets/levels/test.ron")).unwrap();
 
         Self {
             peptide: Peptide::for_level(&level),
@@ -50,11 +48,11 @@ impl GameScreen {
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
         let mut root = RootLayout::new(Vector2::new(16.0, ctx.size().y - 16.0), Anchor::TopLeft);
         root.nest(ctx, ColumnLayout::new(16.0), |ctx, layout| {
-            Text::new(UNDEAD_FONT, "Level One")
+            Text::new(UNDEAD_FONT, &self.level.title)
                 .scale(Vector2::repeat(6.0))
                 .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
                 .layout(ctx, layout);
-            Text::new(UNDEAD_FONT, DUMMY_DESCRIPTION)
+            Text::new(UNDEAD_FONT, &self.level.description)
                 .scale(Vector2::repeat(2.0))
                 .max_width(480.0)
                 .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
@@ -153,6 +151,11 @@ impl GameScreen {
         }
 
         if let Some((selected, next_idx)) = self.selected {
+            if ctx.input.mouse_pressed(MouseButton::Right) {
+                self.selected = None;
+                return;
+            }
+
             let path = self.peptide.path(selected);
             let Some(level_pos) = self.level.peptide.find(&path) else {
                 self.selected = None;
@@ -165,7 +168,7 @@ impl GameScreen {
                 .draw(ctx);
 
             let level = self.level.get(level_pos).unwrap();
-            let Some(next_dir) = level.parents.iter().skip(next_idx as usize).next() else {
+            let Some(next_dir) = level.children.iter().skip(next_idx as usize).next() else {
                 self.selected = None;
                 return;
             };
@@ -174,7 +177,7 @@ impl GameScreen {
 
             // abort if selected is already connected to the max number of this type of amino
             let max = level
-                .parents
+                .children
                 .iter()
                 .filter(|x| {
                     self.level.get(level_pos + x.delta()).map(|x| x.amino) == Some(next.amino)
@@ -187,7 +190,7 @@ impl GameScreen {
                     let Some(child) = self.peptide.get(selected + x.delta()) else {
                         return false;
                     };
-                    child.parents.contains(x.opposite()) && child.amino == next.amino
+                    child.children.contains(x.opposite()) && child.amino == next.amino
                 })
                 .count();
 
@@ -214,18 +217,24 @@ impl GameScreen {
             (clicked && child != selected).then(|| self.selected = None);
             if let Entry::Vacant(e) = self.peptide.inner.entry(child) {
                 let render_pos = world_to_screen(child);
+                Sprite::new(next.amino.asset())
+                    .scale(Vector2::repeat(6.0))
+                    .position(ctx.center() + render_pos, Anchor::Center)
+                    .draw(ctx);
                 Sprite::new(GHOST)
                     .scale(Vector2::repeat(6.0))
                     .position(ctx.center() + render_pos, Anchor::Center)
+                    .z_index(1)
                     .draw(ctx);
 
                 if clicked {
                     let direction = Direction::from_delta(dir).unwrap().opposite();
                     let amino = Amino {
                         amino: next.amino,
-                        parents: Directions::empty() | direction,
+                        children: Directions::empty() | direction,
                     };
                     e.insert(amino);
+                    self.selected = Some((child, 0));
                 }
             }
         }

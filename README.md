@@ -1,3 +1,3 @@
-# `protein-folding`
+# `peptide-synth`
 
 wip game

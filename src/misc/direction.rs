@@ -1,6 +1,7 @@
 use std::ops::BitOr;
 
 use engine::exports::nalgebra::Vector2;
+use serde::Serialize;
 
 #[derive(Clone, Copy)]
 pub enum Direction {
@@ -10,7 +11,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy, Serialize)]
 pub struct Directions {
     inner: u8,
 }

@@ -1,27 +1,17 @@
 use engine::{exports::nalgebra::Vector2, graphics_context::GraphicsContext};
+use serde::Deserialize;
 
-use crate::game::{
-    amino::Amino,
-    peptide::{Peptide, peptide},
-};
+use crate::game::{amino::Amino, peptide::Peptide};
 
+#[derive(Deserialize)]
 pub struct Level {
+    pub title: String,
+    pub description: String,
+
     pub peptide: Peptide,
 }
 
 impl Level {
-    pub fn example() -> Self {
-        Self {
-            peptide: peptide! {
-                Arg at (0, 0) -> (Right),
-                Leu at (1, 0) -> (Right),
-                Asp at (2, 0) -> (Right),
-                Ala at (3, 0) -> (Right),
-                Cys at (4, 0),
-            },
-        }
-    }
-
     pub fn get(&self, pos: Vector2<i32>) -> Option<&Amino> {
         self.peptide.get(pos)
     }

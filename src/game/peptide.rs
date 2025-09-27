@@ -8,6 +8,7 @@ use engine::{
     exports::nalgebra::Vector2,
     graphics_context::GraphicsContext,
 };
+use serde::Deserialize;
 
 use crate::{
     assets::{CONNECTOR_H, CONNECTOR_V},
@@ -19,6 +20,7 @@ use crate::{
     misc::direction::{Direction, Directions},
 };
 
+#[derive(Deserialize)]
 pub struct Peptide {
     pub inner: HashMap<Vector2<i32>, Amino>,
 }
@@ -27,7 +29,7 @@ impl Peptide {
     pub fn for_level(level: &Level) -> Self {
         let mut inner = HashMap::new();
         let mut amino = *level.peptide.inner.get(&Vector2::zeros()).unwrap();
-        amino.parents = Directions::empty();
+        amino.children = Directions::empty();
         inner.insert(Vector2::zeros(), amino);
         Self { inner }
     }
@@ -46,7 +48,7 @@ impl Peptide {
             for dir in Direction::ALL {
                 let pos = next + dir.delta();
                 if let Some(child) = self.inner.get(&pos)
-                    && child.parents.contains(dir.opposite())
+                    && child.children.contains(dir.opposite())
                 {
                     queue.push_back(pos);
                 }
@@ -82,7 +84,7 @@ impl Peptide {
                 continue;
             };
 
-            for dir in amino.parents.iter() {
+            for dir in amino.children.iter() {
                 let pos = pos + dir.delta();
                 let mut history = history.clone();
                 history.push(amino.amino);
@@ -110,7 +112,7 @@ impl Peptide {
                 continue;
             };
 
-            for dir in amino.parents.iter() {
+            for dir in amino.children.iter() {
                 let next_pos = pos + dir.delta();
                 if let Some(next_amino) = self.inner.get(&next_pos) {
                     let mut new_history = history.clone();
@@ -134,8 +136,8 @@ impl Peptide {
 
                 let adjacency = amino.amino.adjacency();
                 if let Some((_, bouns)) = adjacency.iter().find(|x| x.0 == neighbor.amino)
-                    && !neighbor.parents.contains(dir.opposite())
-                    && !amino.parents.contains(dir)
+                    && !neighbor.children.contains(dir.opposite())
+                    && !amino.children.contains(dir)
                 {
                     energy += bouns / 2.0;
                 }
@@ -166,7 +168,7 @@ impl Peptide {
             sprite.is_hovered(ctx).then(|| hover = Some(*pos));
             sprite.draw(ctx);
 
-            for dir in amino.parents.iter() {
+            for dir in amino.children.iter() {
                 let connector_offset = match dir {
                     Direction::Up => Vector2::y() * 6.5,
                     Direction::Down => -Vector2::y() * 5.5,

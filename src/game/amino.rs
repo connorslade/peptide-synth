@@ -1,14 +1,19 @@
 use engine::assets::SpriteRef;
+use serde::{Deserialize, Deserializer};
 
-use crate::{assets, misc::direction::Directions};
+use crate::{
+    assets,
+    misc::direction::{Direction, Directions},
+};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Deserialize)]
 pub struct Amino {
     pub amino: AminoType,
-    pub parents: Directions,
+    #[serde(deserialize_with = "parse_directions")]
+    pub children: Directions,
 }
 
-#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum AminoType {
     Ala, // A
     Cys, // C
@@ -149,4 +154,25 @@ impl AminoType {
             _ => 0.0,
         }
     }
+}
+
+pub fn parse_directions<'de, D>(from: D) -> Result<Directions, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let str = String::deserialize(from)?;
+
+    let mut out = Directions::empty();
+    for chr in str.chars() {
+        out = out
+            | match chr {
+                'L' => Direction::Left,
+                'R' => Direction::Right,
+                'U' => Direction::Up,
+                'D' => Direction::Down,
+                _ => panic!(),
+            };
+    }
+
+    Ok(out)
 }

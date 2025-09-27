@@ -19,7 +19,7 @@ mod screens;
 
 fn main() {
     Application::new(ApplicationArgs {
-        window_attributes: WindowAttributes::default().with_title("Protein Folding"),
+        window_attributes: WindowAttributes::default().with_title("Peptide Synth"),
         asset_constructor: Box::new(assets::init),
         resumed: Box::new(|| {
             let mut title = TitleScreen::new();
