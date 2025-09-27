@@ -1,7 +1,4 @@
-use std::{
-    collections::hash_map::Entry,
-    f32::consts::{PI, TAU},
-};
+use std::collections::hash_map::Entry;
 
 use engine::{
     color::Rgb,
@@ -88,6 +85,11 @@ impl GameScreen {
                         });
                 }
             });
+
+            Text::new(UNDEAD_FONT, format!("Score: {}", self.peptide.score()))
+                .scale(Vector2::repeat(3.0))
+                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                .layout(ctx, layout);
         });
         root.draw(ctx);
 

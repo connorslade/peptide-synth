@@ -24,6 +24,14 @@ pub struct Peptide {
 }
 
 impl Peptide {
+    pub fn for_level(level: &Level) -> Self {
+        let mut inner = HashMap::new();
+        let mut amino = *level.peptide.inner.get(&Vector2::zeros()).unwrap();
+        amino.parents = Directions::empty();
+        inner.insert(Vector2::zeros(), amino);
+        Self { inner }
+    }
+
     pub fn get(&self, pos: Vector2<i32>) -> Option<&Amino> {
         self.inner.get(&pos)
     }
@@ -115,6 +123,39 @@ impl Peptide {
         None
     }
 
+    pub fn score(&self) -> f32 {
+        let mut energy = 0.0;
+
+        for (pos, amino) in &self.inner {
+            for dir in Direction::ALL {
+                let Some(neighbor) = self.get(pos + dir.delta()) else {
+                    continue;
+                };
+
+                let adjacency = amino.amino.adjacency();
+                if let Some((_, bouns)) = adjacency.iter().find(|x| x.0 == neighbor.amino)
+                    && !neighbor.parents.contains(dir.opposite())
+                    && !amino.parents.contains(dir)
+                {
+                    energy += bouns / 2.0;
+                }
+
+                energy += amino.amino.hydrophobic();
+            }
+
+            // electrostatics, q₁q₂/r
+            for (pos_b, amino_b) in &self.inner {
+                if pos == pos_b {
+                    continue;
+                }
+                energy += (amino.amino.charge() * amino_b.amino.charge()) as f32
+                    / (pos - pos_b).map(|x| x as f32).magnitude();
+            }
+        }
+
+        energy
+    }
+
     pub fn render(&self, ctx: &mut GraphicsContext, origin: Vector2<f32>) -> Option<Vector2<i32>> {
         let mut hover = None;
         for (pos, amino) in self.inner.iter() {
@@ -142,16 +183,6 @@ impl Peptide {
         }
 
         hover
-    }
-}
-
-impl Peptide {
-    pub fn for_level(level: &Level) -> Self {
-        let mut inner = HashMap::new();
-        let mut amino = *level.peptide.inner.get(&Vector2::zeros()).unwrap();
-        amino.parents = Directions::empty();
-        inner.insert(Vector2::zeros(), amino);
-        Self { inner }
     }
 }
 
