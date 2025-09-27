@@ -1,4 +1,4 @@
-use std::collections::hash_map::Entry;
+use std::{collections::hash_map::Entry, f32::EPSILON};
 
 use engine::{
     color::Rgb,
@@ -9,14 +9,14 @@ use engine::{
     },
     graphics_context::GraphicsContext,
     layout::{
-        Justify, LayoutElement, LayoutMethods, column::ColumnLayout, root::RootLayout,
-        row::RowLayout, tracker::LayoutTracker,
+        Justify, LayoutElement, LayoutMethods, column::ColumnLayout, convenience::NoPaddingExt,
+        root::RootLayout, row::RowLayout, tracker::LayoutTracker,
     },
     memory_key,
 };
 
 use crate::{
-    assets::{GHOST, SELECTED, UNDEAD_FONT},
+    assets::{GHOST, SCORE_ARROW, SCORE_BAR, SELECTED, UNDEAD_FONT},
     game::{
         amino::{Amino, AminoType},
         level::Level,
@@ -59,7 +59,30 @@ impl GameScreen {
                 .max_width(480.0)
                 .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
                 .layout(ctx, layout);
-            Spacer::new_y(16.0).layout(ctx, layout);
+
+            let energy = self.peptide.score();
+            let score = energy / -4.4;
+
+            Sprite::new(SCORE_ARROW)
+                .scale(Vector2::repeat(6.0))
+                .position(Vector2::x() * score * 60.0 * 6.0, Anchor::BottomLeft)
+                .no_padding()
+                .layout(ctx, layout);
+            Spacer::new_y(6.0).no_padding().layout(ctx, layout);
+            RowLayout::new(16.0)
+                .justify(Justify::Center)
+                .show(ctx, layout, |ctx, layout| {
+                    Sprite::new(SCORE_BAR)
+                        .scale(Vector2::repeat(6.0))
+                        .layout(ctx, layout);
+
+                    let duration = 10.0 * score + EPSILON;
+                    Text::new(UNDEAD_FONT, format!("{duration:.1} years"))
+                        .scale(Vector2::repeat(3.0))
+                        .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                        .layout(ctx, layout);
+                });
+            Spacer::new_y(8.0).layout(ctx, layout);
 
             layout.nest(ctx, ColumnLayout::new(8.0), |ctx, layout| {
                 for acid in AminoType::ALL {
@@ -85,11 +108,6 @@ impl GameScreen {
                         });
                 }
             });
-
-            Text::new(UNDEAD_FONT, format!("Score: {}", self.peptide.score()))
-                .scale(Vector2::repeat(3.0))
-                .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-                .layout(ctx, layout);
         });
         root.draw(ctx);
 

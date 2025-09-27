@@ -12,6 +12,9 @@ define_refs! {
         CAMPAIGN_BUTTON,
         QUIT_BUTTON,
 
+        SCORE_BAR,
+        SCORE_ARROW,
+
         AMINO_R,
         AMINO_L,
         AMINO_A,
@@ -41,6 +44,9 @@ pub fn init(assets: &mut AssetConstructor) {
     let tiles = assets.register_atlas(include_atlas!("tiles.png"));
     assets.register_sprite(tiles, CAMPAIGN_BUTTON, (33, 0), (44, 12));
     assets.register_sprite(tiles, QUIT_BUTTON, (33, 13), (23, 12));
+
+    assets.register_sprite(tiles, SCORE_BAR, (0, 36), (60, 7));
+    assets.register_sprite(tiles, SCORE_ARROW, (0, 31), (5, 4));
 
     assets.register_sprite(tiles, AMINO_R, (0, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_L, (11, 0), (10, 11));
