@@ -1,6 +1,6 @@
 Level(
     title: "Bio-Coolant",
-    description: "The year is 2074. You are the lead bioengineer on a multi-year mission to the Helios sector investigating possible alien life. Your ship's survival is dependent on various self-repairing bio-circuits that keep things operational even in harsh conditions. In an unfurtunate turn of events the peptide synthesizer has broken down, and with no other options, you must resort to the decades-old manual folding interface.\n\nThis first simple peptide is used to cool heat-sensitive molecular pumps, but if folded incorrectly, it wont last long enough to be useful.",
+    description: "The year is 2074. You are the lead bioengineer on a multi-year mission to the Helios sector investigating possible alien life. Your ship's survival is dependent on various self-repairing bio-circuits that keep things operational even in harsh conditions. In an unfurtunate turn of events the peptide synthesizer has broken down, and with no other options, you must resort to the decades-old manual folding interface.\n\nThis first simple peptide is used to cool heat-sensitive molecular pumps, but if folded incorrectly, it wont last long enough to be useful (10 years).",
     range: (9.333334, 10.0),
 
     peptide: Peptide(inner: {

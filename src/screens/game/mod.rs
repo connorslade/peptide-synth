@@ -24,6 +24,7 @@ pub struct GameScreen {
     peptide: Peptide,
     level: &'static Level,
     level_idx: usize,
+    unlocked: usize,
 
     pan: Vector2<f32>,
     offset: Vector2<f32>,
@@ -40,6 +41,7 @@ impl GameScreen {
             peptide: Peptide::for_level(level),
             level,
             level_idx: 0,
+            unlocked: 0,
 
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),
@@ -51,7 +53,7 @@ impl GameScreen {
     }
 
     pub fn load_level(&mut self, idx: usize) {
-        if idx >= LEVELS.len() {
+        if idx >= LEVELS.len() || idx > self.unlocked {
             return;
         }
 

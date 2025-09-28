@@ -56,13 +56,23 @@ impl GameScreen {
                                     .button(memory_key!())
                                     .on_click(ctx, || close = true)
                                     .layout(ctx, layout);
+
+                                let left_color = Rgb::repeat(1_f32)
+                                    .lerp(Rgb::repeat(0.6), (self.level_idx == 0) as u8 as f32);
+                                let right_color = Rgb::repeat(1_f32).lerp(
+                                    Rgb::repeat(0.6),
+                                    (self.level_idx + 1 > self.unlocked) as u8 as f32,
+                                );
+
                                 Sprite::new(RIGHT_ARROW)
                                     .scale(Vector2::repeat(4.0))
+                                    .color(right_color)
                                     .button(memory_key!())
                                     .on_click(ctx, || self.load_level(self.level_idx + 1))
                                     .layout(ctx, layout);
                                 Sprite::new(LEFT_ARROW)
                                     .scale(Vector2::repeat(4.0))
+                                    .color(left_color)
                                     .button(memory_key!())
                                     .on_click(ctx, || self.load_level(self.level_idx - 1))
                                     .layout(ctx, layout);
@@ -85,7 +95,11 @@ impl GameScreen {
                 let range = self.level.range;
                 let score = (energy - range.1) / (range.0 - range.1);
 
-                let offset_goal = score.clamp(0.0, 1.0) * 60.0 * 6.0;
+                if score >= 0.95 && self.peptide.inner.len() == self.level.peptide.inner.len() {
+                    self.unlocked = self.unlocked.max(self.level_idx + 1);
+                }
+
+                let offset_goal = score.clamp(0.0, 1.0) * 57.0 * 6.0;
                 let offset = ctx.memory.get_or_insert(memory_key!(), offset_goal);
                 *offset = exp_decay(*offset, offset_goal, 10.0, ctx.delta_time);
                 Sprite::new(SCORE_ARROW)
@@ -101,10 +115,10 @@ impl GameScreen {
                             .scale(Vector2::repeat(6.0))
                             .layout(ctx, layout);
 
-                        let duration = if score > 1.0 {
-                            format!("{score:.1} decades")
+                        let duration = if score >= 0.95 {
+                            format!("{score:.1} decade{}", if score >= 1.0 { "s" } else { "" })
                         } else {
-                            format!("{:.1} years", score * 10.0)
+                            format!("{:.1} years", score * 10.0 + f32::EPSILON)
                         };
                         Text::new(UNDEAD_FONT, duration)
                             .scale(Vector2::repeat(3.0))
