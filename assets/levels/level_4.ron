@@ -1,0 +1,15 @@
+Level(
+    title: "Level 4",
+    description: "This is a very simple peptide, only consisting of three amino acids. The two charged amino acids should be kept as far apart as possible",
+    range: (0.032455444, 1.8142135),
+
+    peptide: Peptide(inner: {
+        (3, 1): Amino(amino: Arg, children: ""),
+        (2, 1): Amino(amino: Ala, children: "R"),
+        (1, 1): Amino(amino: Cys, children: "R"),
+        (0, 1): Amino(amino: Phe, children: "R"),
+        (0, 0): Amino(amino: Ala, children: "RU"),
+        (1, 0): Amino(amino: Ala, children: "R"),
+        (2, 0): Amino(amino: Arg, children: ""),
+    })
+)

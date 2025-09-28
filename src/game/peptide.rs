@@ -25,14 +25,6 @@ pub struct Peptide {
     pub inner: HashMap<Vector2<i32>, Amino>,
 }
 
-impl Hash for Peptide {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        let mut items = self.inner.iter().collect::<Vec<_>>();
-        items.sort_by(|a, b| a.0.x.cmp(&b.0.x).then(a.0.y.cmp(&b.0.y)));
-        items.hash(state);
-    }
-}
-
 impl Peptide {
     pub fn for_level(level: &Level) -> Self {
         let mut inner = HashMap::new();
@@ -226,3 +218,12 @@ pub macro peptide($($aa:ident at ($x:expr, $y:expr) $(-> ($($dir:ident),*))?),* 
 
     crate::game::peptide::Peptide { inner }
 }}
+
+// its gross but it works...
+impl Hash for Peptide {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let mut items = self.inner.iter().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.0.x.cmp(&b.0.x).then(a.0.y.cmp(&b.0.y)));
+        items.hash(state);
+    }
+}

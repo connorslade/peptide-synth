@@ -33,7 +33,7 @@ impl GameScreen {
 
             let energy = self.peptide.score();
             let range = self.level.range;
-            let score = (energy - range.1) / (range.0 - range.1);
+            let score = ((energy - range.1) / (range.0 - range.1)).clamp(0.0, 1.0);
 
             let offset_goal = score * 60.0 * 6.0;
             let offset = ctx.memory.get_or_insert(memory_key!(), offset_goal);

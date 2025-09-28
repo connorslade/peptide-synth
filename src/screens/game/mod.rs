@@ -29,7 +29,7 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = ron::de::from_bytes::<Level>(include_asset!("levels/test2.ron")).unwrap();
+        let level = ron::de::from_bytes::<Level>(include_asset!("levels/level_4.ron")).unwrap();
         println!("RANGE: {:?}", level.solve());
 
         Self {

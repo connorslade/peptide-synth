@@ -38,6 +38,8 @@ impl Level {
         let mut queue = VecDeque::new();
         queue.push_back(Peptide::for_level(self));
 
+        let mut scores = Vec::new();
+
         let (mut min, mut max) = (f32::MAX, f32::MIN);
         while let Some(peptide) = queue.pop_front() {
             if !seen.insert(peptide.clone()) {
@@ -60,8 +62,11 @@ impl Level {
             max = max.max(score);
             if peptide.inner.len() == self.peptide.inner.len() {
                 min = min.min(score);
+                scores.push(score);
             }
         }
+
+        println!("{scores:?}");
 
         (min, max)
     }

@@ -1,5 +1,5 @@
 Level(
-    title: "Test2",
+    title: "Level 2",
     description: "This is a very simple peptide, only consisting of three amino acids. The two charged amino acids should be kept as far apart as possible",
     range: (0.5984656, 3.1150918),
 
