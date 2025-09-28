@@ -3,7 +3,11 @@ use std::{
     sync::LazyLock,
 };
 
-use engine::{color::Rgb, exports::nalgebra::Vector2, graphics_context::GraphicsContext};
+use engine::{
+    color::Rgb,
+    exports::{nalgebra::Vector2, winit::keyboard::KeyCode},
+    graphics_context::GraphicsContext,
+};
 use serde::Deserialize;
 
 use crate::{
@@ -26,7 +30,7 @@ const RAW_LEVELS: &[&[u8]] = &[
 pub static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(|| {
     RAW_LEVELS
         .iter()
-        .map(|x| ron::de::from_bytes(*x).unwrap())
+        .map(|x| ron::de::from_bytes(x).unwrap())
         .collect::<Vec<_>>()
 });
 
@@ -45,7 +49,10 @@ impl Level {
     }
 
     pub fn render(&self, ctx: &mut GraphicsContext, peptide: &Peptide) -> Vector2<f32> {
-        let pos = self.peptide.offset_goal() + Vector2::new(ctx.center().x, 16.0);
+        let bounds = self.peptide.bounds();
+        let width = (bounds.1.x - bounds.0.x) as f32 * 12.0 * 6.0;
+        let pos = Vector2::new(ctx.center().x - width / 2.0, 48.0)
+            - bounds.0.map(|x| x as f32) * 12.0 * 6.0;
         self.peptide.render(ctx, pos, false, |pos, sprite| {
             let path = self.peptide.path(*pos);
             if peptide.find(&path).is_some() {

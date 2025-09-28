@@ -105,7 +105,7 @@ impl Peptide {
         }
     }
 
-    pub fn size(&self) -> Vector2<u32> {
+    pub fn bounds(&self) -> (Vector2<i32>, Vector2<i32>) {
         let mut min = Vector2::repeat(i32::MAX);
         let mut max = Vector2::repeat(i32::MIN);
 
@@ -116,7 +116,7 @@ impl Peptide {
             max.y = max.y.max(pos.y);
         }
 
-        Vector2::new(max.x - min.x + 1, max.y - min.y + 1).map(|x| x as u32)
+        (min, max)
     }
 
     pub fn path(&self, pos: Vector2<i32>) -> Vec<AminoType> {
@@ -313,8 +313,11 @@ impl Peptide {
     }
 
     pub fn offset_goal(&self) -> Vector2<f32> {
-        let size = (self.size() * 12 * 6).map(|x| x as f32);
-        Vector2::new(5.0 * 6.0 - size.x / 2.0, size.y / 2.0)
+        let (min, max) = self.bounds();
+        let center = (min.map(|c| c as f32) + max.map(|c| c as f32)) / 2.0;
+        let offset = center * 12.0 * 6.0;
+
+        -Vector2::new(offset.x, offset.y)
     }
 }
 

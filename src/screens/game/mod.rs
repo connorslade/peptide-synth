@@ -37,7 +37,7 @@ impl GameScreen {
     pub fn new() -> Self {
         let level = &LEVELS[0];
         Self {
-            peptide: Peptide::for_level(&level),
+            peptide: Peptide::for_level(level),
             level,
             level_idx: 0,
 
@@ -76,7 +76,7 @@ impl GameScreen {
 
         let offset_goal = self.peptide.offset_goal();
         self.offset.x = exp_decay(self.offset.x, offset_goal.x, 10.0, ctx.delta_time);
-        self.offset.y = exp_decay(self.offset.y, -offset_goal.y, 10.0, ctx.delta_time);
+        self.offset.y = exp_decay(self.offset.y, offset_goal.y, 10.0, ctx.delta_time);
         let origin = ctx.center() + self.offset + self.pan;
 
         // Render the board and level peptides
