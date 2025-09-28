@@ -1,3 +1,5 @@
+use std::collections::{HashSet, VecDeque};
+
 use engine::{exports::nalgebra::Vector2, graphics_context::GraphicsContext};
 use serde::Deserialize;
 
@@ -6,13 +8,14 @@ use crate::{
         amino::{Amino, AminoType},
         peptide::Peptide,
     },
-    misc::direction::Direction,
+    misc::direction::{Direction, Directions},
 };
 
 #[derive(Deserialize)]
 pub struct Level {
     pub title: String,
     pub description: String,
+    pub range: (f32, f32),
 
     pub peptide: Peptide,
 }
@@ -27,9 +30,44 @@ impl Level {
         self.peptide.render(ctx, pos);
         pos
     }
+}
+
+impl Level {
+    pub fn solve(&self) -> (f32, f32) {
+        let mut seen = HashSet::new();
+        let mut queue = VecDeque::new();
+        queue.push_back(Peptide::for_level(self));
+
+        let (mut min, mut max) = (f32::MAX, f32::MIN);
+        while let Some(peptide) = queue.pop_front() {
+            if !seen.insert(peptide.clone()) {
+                continue;
+            }
+
+            for (amino, pos, direction) in self.options(&peptide) {
+                let mut peptide = peptide.clone();
+                peptide.inner.insert(
+                    pos,
+                    Amino {
+                        amino,
+                        children: Directions::empty() | direction,
+                    },
+                );
+                queue.push_back(peptide);
+            }
+
+            let score = peptide.score();
+            max = max.max(score);
+            if peptide.inner.len() == self.peptide.inner.len() {
+                min = min.min(score);
+            }
+        }
+
+        (min, max)
+    }
 
     // enumerates all possible amino acids that can be added to the peptide
-    pub fn options(&self, peptide: &Peptide) -> Vec<(AminoType, Vector2<i32>, Direction)> {
+    fn options(&self, peptide: &Peptide) -> Vec<(AminoType, Vector2<i32>, Direction)> {
         let mut out = Vec::new();
 
         for pos in peptide.inner.keys() {

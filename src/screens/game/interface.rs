@@ -32,9 +32,10 @@ impl GameScreen {
                 .layout(ctx, layout);
 
             let energy = self.peptide.score();
-            let score = energy / -4.4;
-            let offset_goal = score * 60.0 * 6.0;
+            let range = self.level.range;
+            let score = (energy - range.1) / (range.0 - range.1);
 
+            let offset_goal = score * 60.0 * 6.0;
             let offset = ctx.memory.get_or_insert(memory_key!(), offset_goal);
             *offset = exp_decay(*offset, offset_goal, 10.0, ctx.delta_time);
             Sprite::new(SCORE_ARROW)
