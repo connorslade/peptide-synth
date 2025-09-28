@@ -1,0 +1,44 @@
+name: Publish
+on: workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hecrj/setup-rust-action@v2
+        with:
+          rust-version: nightly
+
+      - name: Install Dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt install libasound2-dev
+
+      - name: Build with
+        run: cargo build -r
+
+      - name: Package for Steam
+        run: |
+          mkdir dist
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            cp target/release/peptide-synth dist
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            cp target/release/peptide-synth.exe dist
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            cp target/release/peptide-synth dist
+          else
+                echo "$RUNNER_OS not supported"
+                exit 1
+          fi
+        shell: bash
+
+      - name: Upload Zipped Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: peptide-synth-${{ runner.os }}
+          path: dist/*
