@@ -11,7 +11,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Default, Clone, Copy, Serialize)]
+#[derive(Default, Clone, Copy, Hash, PartialEq, Eq, Serialize)]
 pub struct Directions {
     inner: u8,
 }

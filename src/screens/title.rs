@@ -57,6 +57,12 @@ impl TitleScreen {
             )
             .draw(ctx);
 
+        Text::new(UNDEAD_FONT, "By Connor Slade")
+            .scale(Vector2::repeat(4.0))
+            .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+            .position(Vector2::new(ctx.size().x - 16.0, 16.0), Anchor::BottomRight)
+            .draw(ctx);
+
         let (mut quit, mut game) = (false, false);
         let mut root = RootLayout::new(ctx.center(), Anchor::TopCenter);
         ColumnLayout::new(16.0)

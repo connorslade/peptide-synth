@@ -6,7 +6,7 @@ use crate::{
     misc::direction::{Direction, Directions},
 };
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Deserialize)]
 pub struct Amino {
     pub amino: AminoType,
     #[serde(deserialize_with = "parse_directions")]
@@ -56,14 +56,17 @@ impl AminoType {
     }
 
     pub fn desc(&self) -> String {
-        let charge = self.charge();
-        let adjacency = self.adjacency();
+        let (charge, hydrophobic, adjacency) =
+            (self.charge(), self.hydrophobic(), self.adjacency());
 
-        let hydrophobic = if self.hydrophobic() < 0.0 {
+        let hydrophobic = if hydrophobic == 0.0 {
+            ""
+        } else if hydrophobic < 0.0 {
             "δ∙"
         } else {
             "Ψ∙"
         };
+
         let charge = if charge == 0 {
             ""
         } else if charge > 0 {
@@ -71,6 +74,7 @@ impl AminoType {
         } else {
             "-∙"
         };
+
         let adjacency = if adjacency.is_empty() {
             ""
         } else {
@@ -147,7 +151,7 @@ impl AminoType {
     // Stability per exposed side
     pub fn hydrophobic(&self) -> f32 {
         match self {
-            AminoType::Ala => -0.3,
+            AminoType::Ala => 0.0,
             AminoType::Leu => -0.6,
             AminoType::Phe => -0.6,
             AminoType::Cys => -0.2,

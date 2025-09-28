@@ -1,4 +1,7 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    hash::{Hash, Hasher},
+};
 
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
@@ -17,9 +20,17 @@ use crate::{
     misc::direction::{Direction, Directions},
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, PartialEq, Eq, Clone)]
 pub struct Peptide {
     pub inner: HashMap<Vector2<i32>, Amino>,
+}
+
+impl Hash for Peptide {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let mut items = self.inner.iter().collect::<Vec<_>>();
+        items.sort_by(|a, b| a.0.x.cmp(&b.0.x).then(a.0.y.cmp(&b.0.y)));
+        items.hash(state);
+    }
 }
 
 impl Peptide {
