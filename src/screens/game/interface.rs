@@ -21,7 +21,10 @@ use crate::{
     consts::SCREEN,
     game::{amino::AminoType, level::LEVELS},
     misc::{button::ButtonExt, exp_decay},
-    screens::{Screen, game::GameScreen},
+    screens::{
+        Screen,
+        game::{GameScreen, LevelStatus},
+    },
 };
 
 impl GameScreen {
@@ -51,37 +54,53 @@ impl GameScreen {
                             ctx,
                             layout,
                             |ctx, layout| {
-                                Sprite::new(EX)
-                                    .scale(Vector2::repeat(4.0))
-                                    .button(memory_key!())
+                                let arrow = |sprite, color| {
+                                    Sprite::new(sprite)
+                                        .scale(Vector2::repeat(4.0))
+                                        .color(color)
+                                        .button(memory_key!(sprite))
+                                };
+
+                                arrow(EX, Rgb::repeat(1.0))
                                     .on_click(ctx, || close = true)
                                     .layout(ctx, layout);
 
-                                let left_color = Rgb::repeat(1_f32)
-                                    .lerp(Rgb::repeat(0.6), (self.level_idx == 0) as u8 as f32);
-                                let right_color = Rgb::repeat(1_f32).lerp(
-                                    Rgb::repeat(0.6),
-                                    (self.level_idx + 1 > self.unlocked) as u8 as f32,
-                                );
+                                match self.level_status {
+                                    LevelStatus::Campaign {
+                                        level_idx,
+                                        unlocked,
+                                    } => {
+                                        let left_color = Rgb::repeat(1_f32)
+                                            .lerp(Rgb::repeat(0.6), (level_idx == 0) as u8 as f32);
+                                        let right_color = Rgb::repeat(1_f32).lerp(
+                                            Rgb::repeat(0.6),
+                                            (level_idx + 1 > unlocked) as u8 as f32,
+                                        );
 
-                                Sprite::new(RIGHT_ARROW)
-                                    .scale(Vector2::repeat(4.0))
-                                    .color(right_color)
-                                    .button(memory_key!())
-                                    .on_click(ctx, || {
-                                        if self.level_idx + 1 == LEVELS.len() {
-                                            win = true;
-                                        } else {
-                                            self.load_level(self.level_idx + 1)
-                                        }
-                                    })
-                                    .layout(ctx, layout);
-                                Sprite::new(LEFT_ARROW)
-                                    .scale(Vector2::repeat(4.0))
-                                    .color(left_color)
-                                    .button(memory_key!())
-                                    .on_click(ctx, || self.load_level(self.level_idx - 1))
-                                    .layout(ctx, layout);
+                                        arrow(RIGHT_ARROW, right_color)
+                                            .on_click(ctx, || {
+                                                if level_idx + 1 == LEVELS.len() {
+                                                    win = true;
+                                                } else {
+                                                    self.load_level(level_idx + 1)
+                                                }
+                                            })
+                                            .layout(ctx, layout);
+                                        arrow(LEFT_ARROW, left_color)
+                                            .on_click(ctx, || self.load_level(level_idx - 1))
+                                            .layout(ctx, layout);
+                                    }
+                                    LevelStatus::Random { solved } => {
+                                        let color = Rgb::repeat(1_f32)
+                                            .lerp(Rgb::repeat(0.6), !solved as u8 as f32);
+                                        arrow(RIGHT_ARROW, color)
+                                            .on_click(ctx, || {
+                                                solved.then(|| self.randomize());
+                                            })
+                                            .layout(ctx, layout);
+                                    }
+                                }
+
                                 Spacer::new_x(layout.available().x)
                                     .no_padding()
                                     .layout(ctx, layout);
@@ -102,7 +121,13 @@ impl GameScreen {
                 let score = (energy - range.1) / (range.0 - range.1);
 
                 if score >= 0.95 && self.peptide.inner.len() == self.level.peptide.inner.len() {
-                    self.unlocked = self.unlocked.max(self.level_idx + 1);
+                    match &mut self.level_status {
+                        LevelStatus::Campaign {
+                            level_idx,
+                            unlocked,
+                        } => *unlocked = (*unlocked).max(*level_idx + 1),
+                        LevelStatus::Random { solved } => *solved = true,
+                    }
                 }
 
                 let offset_goal = score.clamp(0.0, 1.0) * 57.0 * 6.0;

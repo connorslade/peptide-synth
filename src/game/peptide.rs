@@ -249,8 +249,16 @@ impl Peptide {
                 continue;
             }
 
+            // because of my greedy path logic
+            let amino = *AminoType::ALL.choose(&mut rng).unwrap();
+            if (self.get(pos).unwrap().children.iter())
+                .any(|x| self.get(pos + x.delta()).unwrap().amino == amino)
+            {
+                continue;
+            }
+
             let amino = Amino {
-                amino: *AminoType::ALL.choose(&mut rng).unwrap(),
+                amino,
                 children: Directions::empty(),
             };
 

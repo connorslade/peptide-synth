@@ -1,13 +1,19 @@
 #![feature(decl_macro)]
 
+use std::mem;
+
 use engine::{
     application::{Application, ApplicationArgs},
     exports::winit::{dpi::PhysicalSize, window::WindowAttributes},
 };
 
 use crate::{
-    consts::{SCREEN, colors},
-    screens::{Screen, game::GameScreen, title::TitleScreen},
+    consts::{LEVEL_STATUS, SCREEN, colors},
+    screens::{
+        Screen,
+        game::{GameScreen, LevelStatus},
+        title::TitleScreen,
+    },
 };
 
 mod assets;
@@ -29,8 +35,15 @@ fn main() {
             Box::new(move |ctx| {
                 ctx.window.vsync(true);
                 ctx.background(colors::BACKGROUND);
-                let screen = ctx.memory.get_or_insert(SCREEN, Screen::Title);
+                if let Some(status) = ctx.memory.get_mut::<Option<LevelStatus>>(LEVEL_STATUS) {
+                    match mem::take(status) {
+                        Some(LevelStatus::Campaign { .. }) => game = GameScreen::new(),
+                        Some(LevelStatus::Random { .. }) => game.randomize(),
+                        None => {}
+                    }
+                }
 
+                let screen = ctx.memory.get_or_insert(SCREEN, Screen::Title);
                 match screen {
                     Screen::Title => title.render(ctx),
                     Screen::Game => game.render(ctx),

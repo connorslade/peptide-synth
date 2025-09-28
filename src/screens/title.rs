@@ -11,11 +11,11 @@ use engine::{
 use rand::{Rng, rng, seq::IndexedRandom};
 
 use crate::{
-    assets::{CAMPAIGN_BUTTON, QUIT_BUTTON, UNDEAD_FONT},
-    consts::SCREEN,
+    assets::{CAMPAIGN_BUTTON, QUIT_BUTTON, RANDOM_BUTTON, UNDEAD_FONT},
+    consts::{LEVEL_STATUS, SCREEN},
     game::amino::AminoType,
     misc::button::ButtonExt,
-    screens::Screen,
+    screens::{Screen, game::LevelStatus},
 };
 
 pub struct TitleScreen {
@@ -62,7 +62,7 @@ impl TitleScreen {
             .color(Rgb::repeat(0.5))
             .draw(ctx);
 
-        let (mut quit, mut game) = (false, false);
+        let (mut quit, mut game) = (false, None);
         let mut root = RootLayout::new(ctx.center(), Anchor::TopCenter);
         ColumnLayout::new(16.0)
             .justify(Justify::Center)
@@ -71,7 +71,18 @@ impl TitleScreen {
                     .scale(Vector2::repeat(6.0))
                     .button(memory_key!())
                     .scale_effect()
-                    .on_click(ctx, || game = true)
+                    .on_click(ctx, || {
+                        game = Some(LevelStatus::Campaign {
+                            level_idx: 0,
+                            unlocked: 0,
+                        })
+                    })
+                    .layout(ctx, layout);
+                Sprite::new(RANDOM_BUTTON)
+                    .scale(Vector2::repeat(6.0))
+                    .button(memory_key!())
+                    .scale_effect()
+                    .on_click(ctx, || game = Some(LevelStatus::Random { solved: false }))
                     .layout(ctx, layout);
                 Sprite::new(QUIT_BUTTON)
                     .scale(Vector2::repeat(6.0))
@@ -82,7 +93,10 @@ impl TitleScreen {
             });
         root.draw(ctx);
         quit.then(|| ctx.window.close());
-        game.then(|| ctx.memory.insert(SCREEN, Screen::Game));
+        if let Some(status) = game {
+            ctx.memory.insert(SCREEN, Screen::Game);
+            ctx.memory.insert(LEVEL_STATUS, Some(status));
+        }
 
         for element in self.elements.iter_mut() {
             element.theta += element.speed * ctx.delta_time;

@@ -25,8 +25,7 @@ mod selection;
 pub struct GameScreen {
     peptide: Peptide,
     level: Cow<'static, Level>,
-    level_idx: usize,
-    unlocked: usize,
+    level_status: LevelStatus,
 
     pan: Vector2<f32>,
     offset: Vector2<f32>,
@@ -36,6 +35,11 @@ pub struct GameScreen {
     selected: Option<Vector2<i32>>,
 }
 
+pub enum LevelStatus {
+    Campaign { level_idx: usize, unlocked: usize },
+    Random { solved: bool },
+}
+
 impl GameScreen {
     pub fn new() -> Self {
         let level = &LEVELS[0];
@@ -43,8 +47,10 @@ impl GameScreen {
         Self {
             peptide: Peptide::for_level(level),
             level: Cow::Borrowed(level),
-            level_idx: 0,
-            unlocked: 0,
+            level_status: LevelStatus::Campaign {
+                level_idx: 0,
+                unlocked: 0,
+            },
 
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),
@@ -55,16 +61,34 @@ impl GameScreen {
         }
     }
 
+    pub fn randomize(&mut self) {
+        self.level_status = LevelStatus::Random { solved: false };
+        self.level = Cow::Owned(Level::generate());
+        self.reset();
+    }
+
     pub fn load_level(&mut self, idx: usize) {
-        if idx >= LEVELS.len() || idx > self.unlocked {
+        let LevelStatus::Campaign {
+            level_idx,
+            unlocked,
+        } = &mut self.level_status
+        else {
+            return;
+        };
+
+        if idx >= LEVELS.len() || idx > *unlocked {
             return;
         }
 
         let level = &LEVELS[idx];
 
+        *level_idx = idx;
         self.level = Cow::Borrowed(level);
-        self.level_idx = idx;
-        self.peptide = Peptide::for_level(level);
+        self.reset();
+    }
+
+    pub fn reset(&mut self) {
+        self.peptide = Peptide::for_level(&self.level);
         self.pan = Vector2::zeros();
         self.offset = Vector2::zeros();
         self.child_idx = 0;

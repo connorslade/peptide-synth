@@ -10,6 +10,7 @@ define_refs! {
     },
     SpriteRef => {
         CAMPAIGN_BUTTON,
+        RANDOM_BUTTON,
         QUIT_BUTTON,
 
         SCORE_BAR,
@@ -50,15 +51,16 @@ macro include_atlas($name:expr) {
 pub fn init(assets: &mut AssetConstructor) {
     let tiles = assets.register_atlas(include_atlas!("tiles.png"));
     assets.register_sprite(tiles, CAMPAIGN_BUTTON, (33, 0), (44, 12));
-    assets.register_sprite(tiles, QUIT_BUTTON, (33, 13), (23, 12));
+    assets.register_sprite(tiles, RANDOM_BUTTON, (33, 13), (36, 12));
+    assets.register_sprite(tiles, QUIT_BUTTON, (33, 26), (23, 12));
 
-    assets.register_sprite(tiles, SCORE_BAR, (0, 36), (60, 7));
+    assets.register_sprite(tiles, SCORE_BAR, (0, 46), (60, 7));
     assets.register_sprite(tiles, SCORE_ARROW, (0, 31), (5, 4));
-    assets.register_sprite(tiles, LEFT_ARROW, (33, 26), (6, 6));
-    assets.register_sprite(tiles, RIGHT_ARROW, (40, 26), (6, 6));
-    assets.register_sprite(tiles, EX, (48, 26), (5, 6));
-    assets.register_sprite(tiles, COLLAPSE, (66, 13), (8, 9));
-    assets.register_sprite(tiles, EXPAND, (57, 13), (8, 9));
+    assets.register_sprite(tiles, LEFT_ARROW, (57, 26), (6, 6));
+    assets.register_sprite(tiles, RIGHT_ARROW, (64, 26), (6, 6));
+    assets.register_sprite(tiles, EX, (72, 26), (5, 6));
+    assets.register_sprite(tiles, COLLAPSE, (9, 36), (8, 9));
+    assets.register_sprite(tiles, EXPAND, (0, 36), (8, 9));
 
     assets.register_sprite(tiles, AMINO_R, (0, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_L, (11, 0), (10, 11));
