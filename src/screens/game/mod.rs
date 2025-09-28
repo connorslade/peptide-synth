@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
     exports::{
@@ -22,7 +24,7 @@ mod selection;
 
 pub struct GameScreen {
     peptide: Peptide,
-    level: &'static Level,
+    level: Cow<'static, Level>,
     level_idx: usize,
     unlocked: usize,
 
@@ -40,7 +42,7 @@ impl GameScreen {
 
         Self {
             peptide: Peptide::for_level(level),
-            level,
+            level: Cow::Borrowed(level),
             level_idx: 0,
             unlocked: 0,
 
@@ -60,7 +62,7 @@ impl GameScreen {
 
         let level = &LEVELS[idx];
 
-        self.level = level;
+        self.level = Cow::Borrowed(level);
         self.level_idx = idx;
         self.peptide = Peptide::for_level(level);
         self.pan = Vector2::zeros();
@@ -71,7 +73,7 @@ impl GameScreen {
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
         if ctx.input.key_pressed(KeyCode::Space) {
-            self.peptide.mutate();
+            self.level = Cow::Owned(Level::generate());
         }
 
         self.interface(ctx);

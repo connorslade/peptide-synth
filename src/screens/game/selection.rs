@@ -1,6 +1,9 @@
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
-    exports::{nalgebra::Vector2, winit::event::MouseButton},
+    exports::{
+        nalgebra::Vector2,
+        winit::{event::MouseButton, keyboard::KeyCode},
+    },
     graphics_context::GraphicsContext,
 };
 
@@ -19,9 +22,9 @@ impl GameScreen {
         level_origin: Vector2<f32>,
     ) {
         let delta = ctx.input.scroll_delta() as i8;
-        if delta > 0 {
+        if delta > 0 || ctx.input.key_pressed(KeyCode::ArrowRight) {
             self.child_idx = (self.child_idx + 1) % 3;
-        } else if delta < 0 {
+        } else if delta < 0 || ctx.input.key_pressed(KeyCode::ArrowLeft) {
             self.child_idx = (self.child_idx + 2) % 3
         }
 

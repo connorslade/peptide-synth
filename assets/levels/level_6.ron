@@ -1,6 +1,6 @@
 Level(
-    title: "Level 6",
-    description: "",
+    title: "HA-307-181",
+    description: "tbh i havent actaully solved this one myself :eyes:",
     range: (1.4999995, 31.933334),
 
     peptide: Peptide(inner: {

@@ -4,6 +4,7 @@ use std::{
 };
 
 use engine::{color::Rgb, exports::nalgebra::Vector2, graphics_context::GraphicsContext};
+use rand::{Rng, rng, seq::IndexedRandom};
 use serde::Deserialize;
 
 use crate::{
@@ -31,7 +32,7 @@ pub static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(|| {
         .collect::<Vec<_>>()
 });
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Level {
     pub title: String,
     pub description: String,
@@ -63,47 +64,46 @@ impl Level {
 }
 
 impl Level {
-    pub fn solve_p(&self) -> Peptide {
-        let mut seen = HashSet::new();
-        let mut queue = VecDeque::new();
-        queue.push_back(Peptide::for_level(self));
+    pub fn generate() -> Level {
+        const PREFIX: &[&str] = &[
+            "BPC", "PT", "MET", "CJC", "DSIP", "Mots", "SS", "LL", "ARA", "TZP",
+        ];
 
-        while let Some(peptide) = queue.pop_front() {
-            if !seen.insert(peptide.clone()) {
-                continue;
-            }
+        let mut rng = rng();
+        let title = format!(
+            "{}-{}",
+            PREFIX.choose(&mut rng).unwrap(),
+            rng.random_range(1..=999)
+        );
 
-            for (amino, pos, dir) in self.options(&peptide) {
-                let amino = Amino {
-                    amino,
-                    children: Directions::empty(),
-                };
+        let mut peptide = Peptide::empty();
+        peptide.inner.insert(
+            Vector2::zeros(),
+            Amino {
+                amino: *AminoType::ALL.choose(&mut rng).unwrap(),
+                children: Directions::empty(),
+            },
+        );
 
-                let mut peptide = peptide.clone();
-                (peptide.inner.get_mut(&(pos - dir.delta())).unwrap())
-                    .children
-                    .set(dir);
-                peptide.inner.insert(pos, amino);
-                queue.push_back(peptide);
-            }
-
-            if peptide.inner.len() == self.peptide.inner.len() {
-                let score = peptide.score();
-                if score < 1.5 {
-                    return peptide;
-                }
-            }
+        for _ in 0..rng.random_range(4..=12) {
+            peptide.mutate();
         }
 
-        panic!()
+        let mut level = Level {
+            title,
+            description: "This level was procedurally generated... Good luck.".into(),
+            range: (0.0, 0.0),
+            peptide,
+        };
+        level.range = level.solve();
+
+        level
     }
 
     pub fn solve(&self) -> (f32, f32) {
         let mut seen = HashSet::new();
         let mut queue = VecDeque::new();
         queue.push_back(Peptide::for_level(self));
-
-        let mut scores = Vec::new();
 
         let (mut min, mut max) = (f32::MAX, f32::MIN);
         while let Some(peptide) = queue.pop_front() {
@@ -129,11 +129,8 @@ impl Level {
             max = max.max(score);
             if peptide.inner.len() == self.peptide.inner.len() {
                 min = min.min(score);
-                scores.push(score);
             }
         }
-
-        println!("{scores:?}");
 
         (min, max)
     }

@@ -1,6 +1,6 @@
 Level(
-    title: "Level 4",
-    description: "",
+    title: "CJC-1372",
+    description: "With only positively charged amino acids, you are going to want to get those as far apart as you can (without sacrificing the stability from other mechanisms).",
     range: (13.0, 16.333336),
 
     peptide: Peptide(inner: {

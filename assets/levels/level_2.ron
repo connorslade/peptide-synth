@@ -1,6 +1,6 @@
 Level(
-    title: "Level 2",
-    description: "Ok this is a gam jam, I don't really have time to write more of these descriptions...",
+    title: "BPC-138",
+    description: "Ok this is a game jam, I don't really have time to write more of these descriptions...\n\nHover over the amino acids in the left sidebar to get more detailed information. Yellow connections between the amino acids you place represent bonds, which each contribute to the stability. Try to get two bonds for this level.",
     range: (20.499998, 23.333334),
 
     peptide: Peptide(inner: {

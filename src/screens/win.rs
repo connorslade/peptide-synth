@@ -19,7 +19,7 @@ pub fn render(ctx: &mut GraphicsContext) {
     let mut quit = false;
     Sprite::new(EX)
         .scale(Vector2::repeat(4.0))
-        .position(ctx.size() - Vector2::repeat(16.0), Anchor::TopRight)
+        .position(ctx.size() - Vector2::new(16.0, 25.0), Anchor::TopRight)
         .button(memory_key!())
         .on_click(ctx, || quit = true)
         .draw(ctx);

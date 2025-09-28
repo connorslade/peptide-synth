@@ -122,7 +122,7 @@ impl GameScreen {
                             .layout(ctx, layout);
 
                         let duration = if score >= 0.95 {
-                            format!("{score:.1} decade{}", if score >= 1.0 { "s" } else { "" })
+                            format!("{score:.1} decade{}", if score >= 1.05 { "s" } else { "" })
                         } else {
                             format!("{:.1} years", score * 10.0 + f32::EPSILON)
                         };

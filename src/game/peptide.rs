@@ -37,6 +37,12 @@ pub struct Peptide {
 }
 
 impl Peptide {
+    pub fn empty() -> Self {
+        Self {
+            inner: HashMap::new(),
+        }
+    }
+
     pub fn for_level(level: &Level) -> Self {
         let mut inner = HashMap::new();
         let mut amino = *level.peptide.inner.get(&Vector2::zeros()).unwrap();

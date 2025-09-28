@@ -1,6 +1,6 @@
 Level(
-    title: "Level 5",
-    description: "",
+    title: "TB-200",
+    description: "I think you've gotten enough hints. Good luck.",
     range: (22.166664, 30.0),
 
     peptide: Peptide(inner: {
