@@ -13,6 +13,8 @@ use engine::{
 pub struct Button<T: ButtonContent> {
     asset: T,
     key: MemoryKey,
+
+    scale: bool,
 }
 
 #[derive(Default)]
@@ -34,7 +36,18 @@ where
 
 impl<T: ButtonContent> Button<T> {
     pub fn new(key: MemoryKey, asset: T) -> Self {
-        Self { asset, key }
+        Self {
+            asset,
+            key,
+            scale: false,
+        }
+    }
+
+    pub fn scale_effect(self) -> Self {
+        Self {
+            scale: true,
+            ..self
+        }
     }
 
     pub fn is_clicked(&self, ctx: &mut GraphicsContext) -> bool {
@@ -59,9 +72,11 @@ impl<T: ButtonContent + 'static> Drawable for Button<T> {
         state.hover_time = state.hover_time.clamp(0.0, 0.1);
         let t = state.hover_time / 0.1;
 
-        let scale = self.asset.get_scale();
-        let scale = scale + Vector2::repeat(t / 20.0).component_mul(&scale);
-        self.asset = self.asset.dynamic_scale(scale, Anchor::Center);
+        if self.scale {
+            let scale = self.asset.get_scale();
+            let scale = scale + Vector2::repeat(t / 20.0).component_mul(&scale);
+            self.asset = self.asset.dynamic_scale(scale, Anchor::Center);
+        }
 
         self.asset.tracked(tracker).draw(ctx);
     }

@@ -28,6 +28,7 @@ pub struct GameScreen {
     pan: Vector2<f32>,
     offset: Vector2<f32>,
 
+    show_desc: bool,
     child_idx: u8,
     selected: Option<Vector2<i32>>,
 }
@@ -43,6 +44,7 @@ impl GameScreen {
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),
 
+            show_desc: true,
             child_idx: 0,
             selected: None,
         }

@@ -17,6 +17,8 @@ define_refs! {
         LEFT_ARROW,
         RIGHT_ARROW,
         EX,
+        COLLAPSE,
+        EXPAND,
 
         AMINO_R,
         AMINO_L,
@@ -55,6 +57,8 @@ pub fn init(assets: &mut AssetConstructor) {
     assets.register_sprite(tiles, LEFT_ARROW, (33, 26), (6, 6));
     assets.register_sprite(tiles, RIGHT_ARROW, (40, 26), (6, 6));
     assets.register_sprite(tiles, EX, (48, 26), (5, 6));
+    assets.register_sprite(tiles, COLLAPSE, (66, 13), (8, 9));
+    assets.register_sprite(tiles, EXPAND, (57, 13), (8, 9));
 
     assets.register_sprite(tiles, AMINO_R, (0, 0), (10, 11));
     assets.register_sprite(tiles, AMINO_L, (11, 0), (10, 11));

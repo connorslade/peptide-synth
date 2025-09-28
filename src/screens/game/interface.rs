@@ -17,7 +17,7 @@ use engine::{
 };
 
 use crate::{
-    assets::{EX, LEFT_ARROW, RIGHT_ARROW, SCORE_ARROW, SCORE_BAR, UNDEAD_FONT},
+    assets::{COLLAPSE, EX, EXPAND, LEFT_ARROW, RIGHT_ARROW, SCORE_ARROW, SCORE_BAR, UNDEAD_FONT},
     consts::SCREEN,
     game::amino::AminoType,
     misc::{button::ButtonExt, exp_decay},
@@ -32,12 +32,18 @@ impl GameScreen {
         ColumnLayout::new(16.0)
             .sized(ctx.size() - Vector2::x() * 32.0)
             .show(ctx, &mut root, |ctx, layout| {
-                RowLayout::new(0.0)
+                RowLayout::new(16.0)
                     .justify(Justify::Center)
                     .show(ctx, layout, |ctx, layout| {
                         Text::new(UNDEAD_FONT, &self.level.title)
                             .scale(Vector2::repeat(6.0))
                             .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                            .layout(ctx, layout);
+                        Sprite::new(if self.show_desc { COLLAPSE } else { EXPAND })
+                            .position(Vector2::y() * -6.0, Anchor::BottomLeft)
+                            .scale(Vector2::repeat(3.0))
+                            .button(memory_key!())
+                            .on_click(ctx, || self.show_desc ^= true)
                             .layout(ctx, layout);
                         Spacer::new_x(16.0).no_padding().layout(ctx, layout);
 
@@ -66,11 +72,14 @@ impl GameScreen {
                             },
                         );
                     });
-                Text::new(UNDEAD_FONT, &self.level.description)
-                    .scale(Vector2::repeat(2.0))
-                    .max_width(530.0)
-                    .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-                    .layout(ctx, layout);
+
+                if self.show_desc {
+                    Text::new(UNDEAD_FONT, &self.level.description)
+                        .scale(Vector2::repeat(2.0))
+                        .max_width(530.0)
+                        .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                        .layout(ctx, layout);
+                }
 
                 let energy = self.peptide.score();
                 let range = self.level.range;

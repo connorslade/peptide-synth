@@ -70,11 +70,13 @@ impl TitleScreen {
                 Sprite::new(CAMPAIGN_BUTTON)
                     .scale(Vector2::repeat(6.0))
                     .button(memory_key!())
+                    .scale_effect()
                     .on_click(ctx, || game = true)
                     .layout(ctx, layout);
                 Sprite::new(QUIT_BUTTON)
                     .scale(Vector2::repeat(6.0))
                     .button(memory_key!())
+                    .scale_effect()
                     .on_click(ctx, || quit = true)
                     .layout(ctx, layout);
             });
