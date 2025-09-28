@@ -1,6 +1,6 @@
 Level(
     title: "Level 3",
-    description: "This is a very simple peptide, only consisting of three amino acids. The two charged amino acids should be kept as far apart as possible",
+    description: "",
     range: (-5.166667, 21.166666),
 
     peptide: Peptide(inner: {

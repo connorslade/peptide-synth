@@ -3,11 +3,7 @@ use std::{
     sync::LazyLock,
 };
 
-use engine::{
-    color::Rgb,
-    exports::{nalgebra::Vector2, winit::keyboard::KeyCode},
-    graphics_context::GraphicsContext,
-};
+use engine::{color::Rgb, exports::nalgebra::Vector2, graphics_context::GraphicsContext};
 use serde::Deserialize;
 
 use crate::{
@@ -25,6 +21,7 @@ const RAW_LEVELS: &[&[u8]] = &[
     &*include_asset!("levels/level_3.ron"),
     &*include_asset!("levels/level_4.ron"),
     &*include_asset!("levels/level_5.ron"),
+    &*include_asset!("levels/level_6.ron"),
 ];
 
 pub static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(|| {
@@ -92,7 +89,7 @@ impl Level {
 
             if peptide.inner.len() == self.peptide.inner.len() {
                 let score = peptide.score();
-                if score < 22.2 {
+                if score < 1.5 {
                     return peptide;
                 }
             }
@@ -136,7 +133,7 @@ impl Level {
             }
         }
 
-        // println!("{scores:?}");
+        println!("{scores:?}");
 
         (min, max)
     }

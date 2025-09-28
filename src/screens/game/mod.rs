@@ -2,7 +2,7 @@ use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
     exports::{
         nalgebra::Vector2,
-        winit::{event::MouseButton, window::CursorIcon},
+        winit::{event::MouseButton, keyboard::KeyCode, window::CursorIcon},
     },
     graphics_context::GraphicsContext,
 };
@@ -36,12 +36,14 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = &LEVELS[0];
+        let level = &LEVELS[5];
+        // dbg!(level.solve());
+
         Self {
-            peptide: Peptide::for_level(level),
+            peptide: level.solve_p(),
             level,
-            level_idx: 0,
-            unlocked: 0,
+            level_idx: 6,
+            unlocked: 6,
 
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),
@@ -69,6 +71,10 @@ impl GameScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
+        if ctx.input.key_pressed(KeyCode::Space) {
+            self.peptide.mutate();
+        }
+
         self.interface(ctx);
 
         if ctx.input.mouse_down(MouseButton::Middle) {

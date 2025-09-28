@@ -1,0 +1,20 @@
+Level(
+    title: "Level 6",
+    description: "",
+    range: (1.4999995, 31.933334),
+
+    peptide: Peptide(inner: {
+        (0, 0): Amino(amino: Leu, children: "R"),
+        (1, 0): Amino(amino: Phe, children: "R"),
+        (2, 0): Amino(amino: Cys, children: "RU"),
+        (2, 1): Amino(amino: Arg, children: "R"),
+        (3, 1): Amino(amino: Arg, children: ""),
+        (3, 0): Amino(amino: Cys, children: "R"),
+        (4, 0): Amino(amino: Ala, children: "R"),
+        (5, 0): Amino(amino: Phe, children: "RU"),
+        (5, 1): Amino(amino: Asp, children: "R"),
+        (6, 1): Amino(amino: Asp, children: "R"),
+        (7, 1): Amino(amino: Arg, children: ""),
+        (6, 0): Amino(amino: Phe, children: ""),
+    })
+)
