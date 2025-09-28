@@ -127,10 +127,6 @@ impl GameScreen {
             }
         }
 
-        if ctx.input.key_pressed(KeyCode::Space) {
-            self.level = Cow::Owned(Level::generate());
-        }
-
         self.interface(ctx);
 
         if ctx.input.mouse_down(MouseButton::Middle) {
