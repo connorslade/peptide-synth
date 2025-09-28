@@ -90,7 +90,7 @@ impl GameScreen {
                                             .on_click(ctx, || self.load_level(level_idx - 1))
                                             .layout(ctx, layout);
                                     }
-                                    LevelStatus::Random { solved } => {
+                                    LevelStatus::Random { solved, .. } => {
                                         let color = Rgb::repeat(1_f32)
                                             .lerp(Rgb::repeat(0.6), !solved as u8 as f32);
                                         arrow(RIGHT_ARROW, color)
@@ -126,7 +126,7 @@ impl GameScreen {
                             level_idx,
                             unlocked,
                         } => *unlocked = (*unlocked).max(*level_idx + 1),
-                        LevelStatus::Random { solved } => *solved = true,
+                        LevelStatus::Random { solved, .. } => *solved = true,
                     }
                 }
 

@@ -1,7 +1,12 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    mem,
+    thread::{self, JoinHandle},
+};
 
 use engine::{
-    drawable::{Anchor, Drawable, sprite::Sprite},
+    color::Rgb,
+    drawable::{Anchor, Drawable, sprite::Sprite, text::Text},
     exports::{
         nalgebra::Vector2,
         winit::{event::MouseButton, keyboard::KeyCode, window::CursorIcon},
@@ -10,7 +15,7 @@ use engine::{
 };
 
 use crate::{
-    assets::SELECTED,
+    assets::{SELECTED, UNDEAD_FONT},
     game::{
         level::{LEVELS, Level},
         peptide::Peptide,
@@ -36,8 +41,14 @@ pub struct GameScreen {
 }
 
 pub enum LevelStatus {
-    Campaign { level_idx: usize, unlocked: usize },
-    Random { solved: bool },
+    Campaign {
+        level_idx: usize,
+        unlocked: usize,
+    },
+    Random {
+        solved: bool,
+        generator: Option<JoinHandle<Level>>,
+    },
 }
 
 impl GameScreen {
@@ -62,9 +73,11 @@ impl GameScreen {
     }
 
     pub fn randomize(&mut self) {
-        self.level_status = LevelStatus::Random { solved: false };
-        self.level = Cow::Owned(Level::generate());
-        self.reset();
+        let handle = thread::spawn(Level::generate);
+        self.level_status = LevelStatus::Random {
+            solved: false,
+            generator: Some(handle),
+        };
     }
 
     pub fn load_level(&mut self, idx: usize) {
@@ -96,6 +109,24 @@ impl GameScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
+        if let LevelStatus::Random { solved, generator } = &mut self.level_status
+            && let Some(handle) = generator
+        {
+            if handle.is_finished() {
+                let handle = mem::take(generator).unwrap();
+                self.level = Cow::Owned(handle.join().unwrap());
+                *solved = false;
+                self.reset();
+            } else {
+                Text::new(UNDEAD_FONT, "Generating Level...")
+                    .position(ctx.center(), Anchor::Center)
+                    .scale(Vector2::repeat(4.0))
+                    .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                    .draw(ctx);
+                return;
+            }
+        }
+
         if ctx.input.key_pressed(KeyCode::Space) {
             self.level = Cow::Owned(Level::generate());
         }

@@ -82,7 +82,12 @@ impl TitleScreen {
                     .scale(Vector2::repeat(6.0))
                     .button(memory_key!())
                     .scale_effect()
-                    .on_click(ctx, || game = Some(LevelStatus::Random { solved: false }))
+                    .on_click(ctx, || {
+                        game = Some(LevelStatus::Random {
+                            solved: false,
+                            generator: None,
+                        })
+                    })
                     .layout(ctx, layout);
                 Sprite::new(QUIT_BUTTON)
                     .scale(Vector2::repeat(6.0))
