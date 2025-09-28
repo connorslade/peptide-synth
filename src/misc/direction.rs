@@ -4,6 +4,7 @@ use engine::exports::nalgebra::Vector2;
 use serde::Serialize;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
 pub enum Direction {
     Up,
     Down,

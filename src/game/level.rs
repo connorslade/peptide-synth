@@ -27,7 +27,7 @@ impl Level {
 
     pub fn render(&self, ctx: &mut GraphicsContext, peptide: &Peptide) -> Vector2<f32> {
         let pos = self.peptide.offset_goal() + Vector2::new(ctx.center().x, 16.0);
-        self.peptide.render(ctx, pos, |pos, sprite| {
+        self.peptide.render(ctx, pos, false, |pos, sprite| {
             let path = self.peptide.path(*pos);
             if peptide.find(&path).is_some() {
                 sprite.color(Rgb::hex(0x222034).lerp(Rgb::repeat(1.0), 0.6))

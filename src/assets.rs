@@ -26,7 +26,9 @@ define_refs! {
         GHOST,
 
         CONNECTOR_H,
-        CONNECTOR_V
+        CONNECTOR_V,
+        INTERACTION_H,
+        INTERACTION_V
     }
 }
 
@@ -60,6 +62,8 @@ pub fn init(assets: &mut AssetConstructor) {
 
     assets.register_sprite(tiles, CONNECTOR_H, (0, 24), (2, 2));
     assets.register_sprite(tiles, CONNECTOR_V, (3, 24), (2, 2));
+    assets.register_sprite(tiles, INTERACTION_H, (0, 27), (2, 2));
+    assets.register_sprite(tiles, INTERACTION_V, (3, 27), (2, 2));
 
     load_font(
         assets,

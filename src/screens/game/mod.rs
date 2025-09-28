@@ -79,7 +79,7 @@ impl GameScreen {
         let origin = ctx.center() + self.offset + self.pan;
 
         // Render the board and level peptides
-        let hover = self.peptide.render(ctx, origin, |_, s| s);
+        let hover = self.peptide.render(ctx, origin, true, |_, s| s);
         let level_origin = self.level.render(ctx, &self.peptide);
 
         let mut remove = None;

@@ -15,7 +15,7 @@ use rand::{
 use serde::Deserialize;
 
 use crate::{
-    assets::{CONNECTOR_H, CONNECTOR_V},
+    assets::{CONNECTOR_H, CONNECTOR_V, INTERACTION_H, INTERACTION_V},
     game::{
         amino::{Amino, AminoType},
         level::Level,
@@ -23,6 +23,13 @@ use crate::{
     },
     misc::direction::{Direction, Directions},
 };
+
+const CONNECTOR_OFFSETS: [Vector2<f32>; 4] = [
+    Vector2::new(0.0, 6.5),
+    Vector2::new(0.0, -5.5),
+    Vector2::new(-6.0, 0.0),
+    Vector2::new(6.0, 0.0),
+];
 
 #[derive(Deserialize, PartialEq, Eq, Clone)]
 pub struct Peptide {
@@ -242,6 +249,7 @@ impl Peptide {
         &self,
         ctx: &mut GraphicsContext,
         origin: Vector2<f32>,
+        interactions: bool,
         callback: impl Fn(&Vector2<i32>, Sprite) -> Sprite,
     ) -> Option<Vector2<i32>> {
         let mut hover = None;
@@ -255,18 +263,40 @@ impl Peptide {
             sprite.draw(ctx);
 
             for dir in amino.children.iter() {
-                let connector_offset = match dir {
-                    Direction::Up => Vector2::y() * 6.5,
-                    Direction::Down => -Vector2::y() * 5.5,
-                    Direction::Left => -Vector2::x() * 6.0,
-                    Direction::Right => Vector2::x() * 6.0,
-                } * 6.0;
-
+                let connector_offset = CONNECTOR_OFFSETS[dir as usize] * 6.0;
                 Sprite::new([CONNECTOR_V, CONNECTOR_H][dir.horizontal() as usize])
                     .scale(Vector2::repeat(6.0))
                     .position(origin + render_pos + connector_offset, Anchor::Center)
                     .z_index(2)
                     .draw(ctx);
+            }
+
+            if !interactions {
+                continue;
+            }
+
+            for dir in Direction::ALL {
+                if amino.children.contains(dir) {
+                    continue;
+                }
+
+                let Some(neighbor) = self.get(pos + dir.delta()) else {
+                    continue;
+                };
+
+                if neighbor.children.contains(dir.opposite()) {
+                    continue;
+                }
+
+                let interactions = amino.amino.adjacency();
+                if let Some((_, _)) = interactions.iter().find(|x| x.0 == neighbor.amino) {
+                    let connector_offset = CONNECTOR_OFFSETS[dir as usize] * 6.0;
+                    Sprite::new([INTERACTION_V, INTERACTION_H][dir.horizontal() as usize])
+                        .scale(Vector2::repeat(6.0))
+                        .position(origin + render_pos + connector_offset, Anchor::Center)
+                        .z_index(2)
+                        .draw(ctx);
+                }
             }
         }
 
