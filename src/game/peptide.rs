@@ -8,6 +8,10 @@ use engine::{
     exports::nalgebra::Vector2,
     graphics_context::GraphicsContext,
 };
+use rand::{
+    rng,
+    seq::{IndexedRandom, IteratorRandom},
+};
 use serde::Deserialize;
 
 use crate::{
@@ -38,26 +42,59 @@ impl Peptide {
         self.inner.get(&pos)
     }
 
+    pub fn children_of_type(&self, pos: Vector2<i32>, amino: AminoType) -> u8 {
+        let mut count = 0;
+        let this = self.get(pos).unwrap();
+
+        for dir in this.children.iter() {
+            let Some(child) = self.get(pos + dir.delta()) else {
+                continue;
+            };
+
+            count += (child.amino == amino) as u8;
+        }
+
+        count
+    }
+
+    pub fn parent(&self, pos: Vector2<i32>) -> Option<(Vector2<i32>, Direction)> {
+        for dir in Direction::ALL {
+            let pos = pos + dir.delta();
+            let Some(next) = self.get(pos) else {
+                continue;
+            };
+
+            if next.children.contains(dir.opposite()) {
+                return Some((pos, dir));
+            }
+        }
+
+        None
+    }
+
     pub fn remove(&mut self, pos: Vector2<i32>) {
         if pos == Vector2::zeros() {
             (Direction::ALL.iter()).for_each(|dir| self.remove(pos + dir.delta()));
             return;
         }
 
+        if let Some((parent, dir)) = self.parent(pos) {
+            (self.inner.get_mut(&parent).unwrap().children).remove(dir.opposite());
+        }
+
         let mut queue = VecDeque::new();
         queue.push_back(pos);
 
-        while let Some(next) = queue.pop_front() {
-            self.inner.remove(&next);
+        while let Some(pos) = queue.pop_front() {
+            let Some(next) = self.get(pos) else {
+                continue;
+            };
 
-            for dir in Direction::ALL {
-                let pos = next + dir.delta();
-                if let Some(child) = self.inner.get(&pos)
-                    && child.children.contains(dir.opposite())
-                {
-                    queue.push_back(pos);
-                }
+            for dir in next.children.iter() {
+                queue.push_back(pos + dir.delta());
             }
+
+            self.inner.remove(&pos);
         }
     }
 
@@ -89,8 +126,16 @@ impl Peptide {
                 continue;
             };
 
-            for dir in amino.children.iter() {
+            for dir in Direction::ALL {
                 let pos = pos + dir.delta();
+                let Some(child) = self.get(pos) else {
+                    continue;
+                };
+
+                if !child.children.contains(dir.opposite()) {
+                    continue;
+                }
+
                 let mut history = history.clone();
                 history.push(amino.amino);
                 queue.push_back((pos, history));
@@ -134,40 +179,78 @@ impl Peptide {
         let mut energy = 0.0;
 
         for (pos, amino) in &self.inner {
+            energy += amino.amino.intrinsic_cost() as f32;
+
+            let mut covered_sides = 0;
             for dir in Direction::ALL {
                 let Some(neighbor) = self.get(pos + dir.delta()) else {
                     continue;
                 };
 
+                covered_sides += 1;
                 if !neighbor.children.contains(dir.opposite()) && !amino.children.contains(dir) {
-                    energy += amino.amino.hydrophobic();
                     let adjacency = amino.amino.adjacency();
                     if let Some((_, bouns)) = adjacency.iter().find(|x| x.0 == neighbor.amino) {
-                        energy += bouns / 2.0;
+                        energy += *bouns as f32 / 2.0;
                     }
                 }
             }
+
+            energy += (amino.amino.hydrophobic() * (4 - covered_sides)) as f32;
 
             // electrostatics, q₁q₂/r
             for (pos_b, amino_b) in &self.inner {
                 if pos == pos_b {
                     continue;
                 }
-                energy += (amino.amino.charge() * amino_b.amino.charge()) as f32
-                    / (pos - pos_b).map(|x| x as f32).magnitude();
+
+                let delta = pos - pos_b;
+                let distance = delta.x.abs() + delta.y.abs();
+                energy += (amino.amino.charge() * amino_b.amino.charge()) as f32 / distance as f32;
             }
         }
 
         energy
     }
 
-    pub fn render(&self, ctx: &mut GraphicsContext, origin: Vector2<f32>) -> Option<Vector2<i32>> {
+    pub fn mutate(&mut self) {
+        let mut rng = rng();
+
+        loop {
+            let pos = *self.inner.keys().choose(&mut rng).unwrap();
+            let dir = Direction::ALL
+                .choose_weighted(&mut rng, |dir| if *dir == Direction::Right { 4 } else { 1 })
+                .unwrap();
+            let next = pos + dir.delta();
+
+            if self.inner.contains_key(&next) {
+                continue;
+            }
+
+            let amino = Amino {
+                amino: *AminoType::ALL.choose(&mut rng).unwrap(),
+                children: Directions::empty(),
+            };
+
+            self.inner.get_mut(&pos).unwrap().children.set(*dir);
+            self.inner.insert(next, amino);
+            break;
+        }
+    }
+
+    pub fn render(
+        &self,
+        ctx: &mut GraphicsContext,
+        origin: Vector2<f32>,
+        callback: impl Fn(&Vector2<i32>, Sprite) -> Sprite,
+    ) -> Option<Vector2<i32>> {
         let mut hover = None;
         for (pos, amino) in self.inner.iter() {
             let render_pos = world_to_screen(*pos);
             let sprite = Sprite::new(amino.amino.asset())
                 .scale(Vector2::repeat(6.0))
                 .position(origin + render_pos, Anchor::Center);
+            let sprite = callback(pos, sprite);
             sprite.is_hovered(ctx).then(|| hover = Some(*pos));
             sprite.draw(ctx);
 

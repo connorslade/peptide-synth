@@ -2,15 +2,21 @@ use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
     exports::{
         nalgebra::Vector2,
-        winit::{event::MouseButton, window::CursorIcon},
+        winit::{event::MouseButton, keyboard::KeyCode, window::CursorIcon},
     },
     graphics_context::GraphicsContext,
 };
+use rand::{rng, seq::IndexedRandom};
 
 use crate::{
     assets::{SELECTED, include_asset},
-    game::{level::Level, peptide::Peptide, world_to_screen},
-    misc::exp_decay,
+    game::{
+        amino::{Amino, AminoType},
+        level::Level,
+        peptide::Peptide,
+        world_to_screen,
+    },
+    misc::{direction::Directions, exp_decay},
 };
 
 mod interface;
@@ -29,7 +35,7 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = ron::de::from_bytes::<Level>(include_asset!("levels/level_4.ron")).unwrap();
+        let level = ron::de::from_bytes::<Level>(include_asset!("levels/level_5.ron")).unwrap();
         println!("RANGE: {:?}", level.solve());
 
         Self {
@@ -45,6 +51,21 @@ impl GameScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
+        if ctx.input.key_pressed(KeyCode::Space) {
+            self.level.peptide.inner.clear();
+            self.level.peptide.inner.insert(
+                Vector2::repeat(0),
+                Amino {
+                    amino: *AminoType::ALL.choose(&mut rng()).unwrap(),
+                    children: Directions::empty(),
+                },
+            );
+            for _ in 0..10 {
+                self.level.peptide.mutate();
+            }
+            dbg!(self.level.solve());
+        }
+
         self.interface(ctx);
 
         if ctx.input.mouse_down(MouseButton::Middle) {
@@ -58,8 +79,8 @@ impl GameScreen {
         let origin = ctx.center() + self.offset + self.pan;
 
         // Render the board and level peptides
-        let hover = self.peptide.render(ctx, origin);
-        let level_origin = self.level.render(ctx);
+        let hover = self.peptide.render(ctx, origin, |_, s| s);
+        let level_origin = self.level.render(ctx, &self.peptide);
 
         let mut remove = None;
         if let Some(pos) = hover

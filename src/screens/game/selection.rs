@@ -1,5 +1,3 @@
-use std::collections::hash_map::Entry;
-
 use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
     exports::{nalgebra::Vector2, winit::event::MouseButton},
@@ -8,10 +6,7 @@ use engine::{
 
 use crate::{
     assets::{GHOST, SELECTED},
-    game::{
-        amino::{Amino, AminoType},
-        world_to_screen,
-    },
+    game::{amino::Amino, world_to_screen},
     misc::direction::{Direction, Directions},
     screens::game::GameScreen,
 };
@@ -56,7 +51,9 @@ impl GameScreen {
             let next_pos = level_pos + next_dir.delta();
             let next = self.level.get(next_pos).unwrap();
 
-            if self.max_children_of_type(level_pos, selected, next.amino) {
+            let max = self.level.peptide.children_of_type(level_pos, next.amino);
+            let current = self.peptide.children_of_type(selected, next.amino);
+            if current >= max {
                 continue;
             }
 
@@ -92,7 +89,7 @@ impl GameScreen {
         let child = selected + dir;
         let clicked = ctx.input.mouse_pressed(MouseButton::Left);
         (clicked && child != selected).then(|| self.selected = None);
-        if let Entry::Vacant(e) = self.peptide.inner.entry(child) {
+        if !self.peptide.inner.contains_key(&child) {
             let render_pos = world_to_screen(child);
             Sprite::new(next.amino.asset())
                 .scale(Vector2::repeat(6.0))
@@ -105,45 +102,15 @@ impl GameScreen {
                 .draw(ctx);
 
             if clicked {
-                let direction = Direction::from_delta(dir).unwrap().opposite();
+                (self.peptide.inner.get_mut(&selected).unwrap().children)
+                    .set(Direction::from_delta(dir).unwrap());
                 let amino = Amino {
                     amino: next.amino,
-                    children: Directions::empty() | direction,
+                    children: Directions::empty(),
                 };
-                e.insert(amino);
+                self.peptide.inner.insert(child, amino);
                 self.selected = Some(child);
             }
         }
-    }
-
-    fn max_children_of_type(
-        &self,
-        level_pos: Vector2<i32>,
-        pos: Vector2<i32>,
-        amino: AminoType,
-    ) -> bool {
-        let level = self.level.get(level_pos).unwrap();
-        let max = level
-            .children
-            .iter()
-            .filter(|dir| {
-                self.level
-                    .get(level_pos + dir.delta())
-                    .map(|cell| cell.amino)
-                    == Some(amino)
-            })
-            .count();
-
-        let current = Direction::ALL
-            .iter()
-            .filter(|dir| {
-                let Some(child) = self.peptide.get(pos + dir.delta()) else {
-                    return false;
-                };
-                child.children.contains(dir.opposite()) && child.amino == amino
-            })
-            .count();
-
-        current >= max
     }
 }

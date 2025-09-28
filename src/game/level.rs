@@ -1,6 +1,6 @@
 use std::collections::{HashSet, VecDeque};
 
-use engine::{exports::nalgebra::Vector2, graphics_context::GraphicsContext};
+use engine::{color::Rgb, exports::nalgebra::Vector2, graphics_context::GraphicsContext};
 use serde::Deserialize;
 
 use crate::{
@@ -25,9 +25,16 @@ impl Level {
         self.peptide.get(pos)
     }
 
-    pub fn render(&self, ctx: &mut GraphicsContext) -> Vector2<f32> {
+    pub fn render(&self, ctx: &mut GraphicsContext, peptide: &Peptide) -> Vector2<f32> {
         let pos = self.peptide.offset_goal() + Vector2::new(ctx.center().x, 16.0);
-        self.peptide.render(ctx, pos);
+        self.peptide.render(ctx, pos, |pos, sprite| {
+            let path = self.peptide.path(*pos);
+            if peptide.find(&path).is_some() {
+                sprite.color(Rgb::hex(0x222034).lerp(Rgb::repeat(1.0), 0.6))
+            } else {
+                sprite
+            }
+        });
         pos
     }
 }
@@ -46,15 +53,17 @@ impl Level {
                 continue;
             }
 
-            for (amino, pos, direction) in self.options(&peptide) {
+            for (amino, pos, dir) in self.options(&peptide) {
+                let amino = Amino {
+                    amino,
+                    children: Directions::empty(),
+                };
+
                 let mut peptide = peptide.clone();
-                peptide.inner.insert(
-                    pos,
-                    Amino {
-                        amino,
-                        children: Directions::empty() | direction,
-                    },
-                );
+                (peptide.inner.get_mut(&(pos - dir.delta())).unwrap())
+                    .children
+                    .set(dir);
+                peptide.inner.insert(pos, amino);
                 queue.push_back(peptide);
             }
 
@@ -82,7 +91,10 @@ impl Level {
 
             for child in level.children.iter() {
                 let amino = self.get(level_pos + child.delta()).unwrap();
-                if enough_children_of_type(self, peptide, level_pos, *pos, amino.amino) {
+
+                let max = self.peptide.children_of_type(level_pos, amino.amino);
+                let current = peptide.children_of_type(*pos, amino.amino);
+                if current >= max {
                     continue;
                 }
 
@@ -92,38 +104,11 @@ impl Level {
                         continue;
                     }
 
-                    out.push((amino.amino, next, dir.opposite()));
+                    out.push((amino.amino, next, dir));
                 }
             }
         }
 
         out
     }
-}
-
-fn enough_children_of_type(
-    level: &Level,
-    peptide: &Peptide,
-    level_pos: Vector2<i32>,
-    pos: Vector2<i32>,
-    amino: AminoType,
-) -> bool {
-    let level_item = level.get(level_pos).unwrap();
-    let max = level_item
-        .children
-        .iter()
-        .filter(|dir| level.get(level_pos + dir.delta()).map(|cell| cell.amino) == Some(amino))
-        .count();
-
-    let current = Direction::ALL
-        .iter()
-        .filter(|dir| {
-            let Some(child) = peptide.get(pos + dir.delta()) else {
-                return false;
-            };
-            child.children.contains(dir.opposite()) && child.amino == amino
-        })
-        .count();
-
-    current >= max
 }

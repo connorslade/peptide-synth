@@ -3,7 +3,7 @@ use std::ops::BitOr;
 use engine::exports::nalgebra::Vector2;
 use serde::Serialize;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
     Up,
     Down,
@@ -60,6 +60,14 @@ impl Direction {
 impl Directions {
     pub const fn empty() -> Self {
         Self { inner: 0 }
+    }
+
+    pub const fn set(&mut self, direction: Direction) {
+        self.inner |= 1 << direction as u8;
+    }
+
+    pub const fn remove(&mut self, direction: Direction) {
+        self.inner &= !(1 << direction as u8);
     }
 
     pub const fn contains(&self, direction: Direction) -> bool {

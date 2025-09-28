@@ -1,6 +1,12 @@
 use engine::{
     color::Rgb,
-    drawable::{Anchor, Drawable, spacer::Spacer, sprite::Sprite, text::Text},
+    drawable::{
+        Anchor, Drawable,
+        shape::{rectangle::Rectangle, rectangle_outline::RectangleOutline},
+        spacer::Spacer,
+        sprite::Sprite,
+        text::Text,
+    },
     exports::nalgebra::Vector2,
     graphics_context::GraphicsContext,
     layout::{
@@ -33,9 +39,9 @@ impl GameScreen {
 
             let energy = self.peptide.score();
             let range = self.level.range;
-            let score = ((energy - range.1) / (range.0 - range.1)).clamp(0.0, 1.0);
+            let score = (energy - range.1) / (range.0 - range.1);
 
-            let offset_goal = score * 60.0 * 6.0;
+            let offset_goal = score.clamp(0.0, 1.0) * 60.0 * 6.0;
             let offset = ctx.memory.get_or_insert(memory_key!(), offset_goal);
             *offset = exp_decay(*offset, offset_goal, 10.0, ctx.delta_time);
             Sprite::new(SCORE_ARROW)
@@ -51,8 +57,12 @@ impl GameScreen {
                         .scale(Vector2::repeat(6.0))
                         .layout(ctx, layout);
 
-                    let duration = 10.0 * score + f32::EPSILON;
-                    Text::new(UNDEAD_FONT, format!("{duration:.1} years"))
+                    let duration = if score > 1.0 {
+                        format!("{score:.1} decades")
+                    } else {
+                        format!("{:.1} years", score * 10.0)
+                    };
+                    Text::new(UNDEAD_FONT, duration)
                         .scale(Vector2::repeat(3.0))
                         .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
                         .layout(ctx, layout);
@@ -62,6 +72,26 @@ impl GameScreen {
             layout.nest(ctx, ColumnLayout::new(8.0), |ctx, layout| {
                 for acid in AminoType::ALL {
                     let tracker = LayoutTracker::new(memory_key!(&acid));
+                    if tracker.hovered(ctx) {
+                        let origin = ctx.input.mouse() + Vector2::repeat(16.0);
+                        let text = Text::new(UNDEAD_FONT, acid.long_description())
+                            .position(origin, Anchor::BottomLeft)
+                            .scale(Vector2::repeat(2.0))
+                            .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
+                            .z_index(2);
+                        Rectangle::new(text.size(ctx) + Vector2::repeat(16.0))
+                            .position(origin - Vector2::repeat(8.0), Anchor::BottomLeft)
+                            .color(Rgb::hex(0x292845))
+                            .z_index(1)
+                            .draw(ctx);
+                        RectangleOutline::new(text.size(ctx) + Vector2::repeat(16.0), 4.0)
+                            .position(origin - Vector2::repeat(12.0), Anchor::BottomLeft)
+                            .color(Rgb::hex(0x3f3f74))
+                            .z_index(1)
+                            .draw(ctx);
+                        text.draw(ctx);
+                    }
+
                     RowLayout::new(16.0)
                         .justify(Justify::Center)
                         .tracked(tracker)
@@ -74,7 +104,7 @@ impl GameScreen {
                                     .scale(Vector2::repeat(3.0))
                                     .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
                                     .layout(ctx, layout);
-                                Text::new(UNDEAD_FONT, acid.desc())
+                                Text::new(UNDEAD_FONT, acid.description())
                                     .scale(Vector2::repeat(3.0))
                                     .color(Rgb::hex(0x847e87))
                                     .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))

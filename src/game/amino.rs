@@ -55,13 +55,13 @@ impl AminoType {
         }
     }
 
-    pub fn desc(&self) -> String {
+    pub fn description(&self) -> String {
         let (charge, hydrophobic, adjacency) =
             (self.charge(), self.hydrophobic(), self.adjacency());
 
-        let hydrophobic = if hydrophobic == 0.0 {
+        let hydrophobic = if hydrophobic == 0 {
             ""
-        } else if hydrophobic < 0.0 {
+        } else if hydrophobic < 0 {
             "δ∙"
         } else {
             "Ψ∙"
@@ -91,6 +91,21 @@ impl AminoType {
         desc
     }
 
+    pub fn long_description(&self) -> String {
+        let mut out = format!(
+            "{}\n\nCost: {}\nCharge: {}\nHydrophobic: {}\nInteractions:",
+            self.name(),
+            self.intrinsic_cost(),
+            self.charge(),
+            self.hydrophobic()
+        );
+        for (amino, cost) in self.adjacency() {
+            out.push_str(&format!("\n ∙ {}: {cost}", amino.letter()));
+        }
+
+        out
+    }
+
     pub fn asset(&self) -> SpriteRef {
         match self {
             AminoType::Ala => assets::AMINO_A,
@@ -102,61 +117,64 @@ impl AminoType {
         }
     }
 
+    pub fn intrinsic_cost(&self) -> i32 {
+        match self {
+            AminoType::Ala => 1,
+            AminoType::Leu => 2,
+            AminoType::Phe => 3,
+
+            AminoType::Cys => 3,
+            AminoType::Asp => 4,
+            AminoType::Arg => 4,
+        }
+    }
+
     pub fn charge(&self) -> i32 {
         match self {
             AminoType::Ala => 0,
-            AminoType::Cys => 0,  //Brønsted acid
-            AminoType::Asp => -1, //Brønsted base
+            AminoType::Cys => 0,
+            AminoType::Asp => -1,
             AminoType::Leu => 0,
             AminoType::Phe => 0,
-            AminoType::Arg => 1, //Basic polar
+            AminoType::Arg => 1,
         }
     }
 
     // Must not be adjacent in chain!!
-    pub fn adjacency(&self) -> &[(AminoType, f32)] {
+    pub fn adjacency(&self) -> &[(AminoType, i32)] {
         match self {
             // Salt-bridge
-            // Todo: -0.2 per additional pair
-            AminoType::Arg => &[(AminoType::Asp, -2.0)],
-            AminoType::Asp => &[(AminoType::Arg, -2.0)],
+            AminoType::Arg => &[(AminoType::Asp, -10)],
+            AminoType::Asp => &[(AminoType::Arg, -10)],
 
-            AminoType::Cys => &[
-                (AminoType::Cys, -3.0),
-                (AminoType::Leu, -0.2),
-                (AminoType::Phe, -0.2),
-                (AminoType::Ala, -0.2),
-            ], // Disulfide bond
+            // Disulfide
+            AminoType::Cys => &[(AminoType::Cys, -12)],
+
+            // Aromatic stacking
             AminoType::Phe => &[
-                (AminoType::Phe, -1.0),
-                (AminoType::Leu, -0.2),
-                (AminoType::Ala, -0.2),
-                (AminoType::Cys, -0.2),
-            ], // Aromatic stacking
-
-            // Hydrophobic stacking
-            AminoType::Ala => &[
-                (AminoType::Leu, -0.2),
-                (AminoType::Phe, -0.2),
-                (AminoType::Cys, -0.2),
+                (AminoType::Phe, -6),
+                (AminoType::Leu, -2),
+                (AminoType::Cys, -2),
             ],
-            AminoType::Leu => &[
-                (AminoType::Ala, -0.2),
-                (AminoType::Phe, -0.2),
-                (AminoType::Cys, -0.2),
+
+            AminoType::Leu => &[(AminoType::Leu, -4), (AminoType::Cys, -2)],
+            AminoType::Ala => &[
+                (AminoType::Leu, -2),
+                (AminoType::Phe, -2),
+                (AminoType::Cys, -2),
             ],
         }
     }
 
-    // Stability per exposed side
-    pub fn hydrophobic(&self) -> f32 {
+    // Energy per exposed side
+    pub fn hydrophobic(&self) -> i32 {
         match self {
-            AminoType::Ala => 0.0,
-            AminoType::Leu => -0.6,
-            AminoType::Phe => -0.6,
-            AminoType::Cys => -0.2,
-            AminoType::Asp => 0.3,
-            AminoType::Arg => 0.4,
+            AminoType::Leu => -2,
+            AminoType::Phe => -2,
+            AminoType::Cys => -1,
+            AminoType::Ala => 0,
+            AminoType::Asp => 1,
+            AminoType::Arg => 1,
         }
     }
 }
