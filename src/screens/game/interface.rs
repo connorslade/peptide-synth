@@ -19,7 +19,7 @@ use engine::{
 use crate::{
     assets::{COLLAPSE, EX, EXPAND, LEFT_ARROW, RIGHT_ARROW, SCORE_ARROW, SCORE_BAR, UNDEAD_FONT},
     consts::SCREEN,
-    game::amino::AminoType,
+    game::{amino::AminoType, level::LEVELS},
     misc::{button::ButtonExt, exp_decay},
     screens::{Screen, game::GameScreen},
 };
@@ -27,7 +27,7 @@ use crate::{
 impl GameScreen {
     pub fn interface(&mut self, ctx: &mut GraphicsContext) {
         let mut root = RootLayout::new(Vector2::new(16.0, ctx.size().y - 16.0), Anchor::TopLeft);
-        let mut close = false;
+        let (mut close, mut win) = (false, false);
 
         ColumnLayout::new(16.0)
             .sized(ctx.size() - Vector2::x() * 32.0)
@@ -68,7 +68,13 @@ impl GameScreen {
                                     .scale(Vector2::repeat(4.0))
                                     .color(right_color)
                                     .button(memory_key!())
-                                    .on_click(ctx, || self.load_level(self.level_idx + 1))
+                                    .on_click(ctx, || {
+                                        if self.level_idx + 1 == LEVELS.len() {
+                                            win = true;
+                                        } else {
+                                            self.load_level(self.level_idx + 1)
+                                        }
+                                    })
                                     .layout(ctx, layout);
                                 Sprite::new(LEFT_ARROW)
                                     .scale(Vector2::repeat(4.0))
@@ -175,5 +181,6 @@ impl GameScreen {
         root.draw(ctx);
 
         close.then(|| ctx.memory.insert(SCREEN, Screen::Title));
+        win.then(|| ctx.memory.insert(SCREEN, Screen::Win));
     }
 }

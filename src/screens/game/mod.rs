@@ -36,14 +36,13 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = &LEVELS[5];
-        // dbg!(level.solve());
+        let level = &LEVELS[0];
 
         Self {
-            peptide: level.solve_p(),
+            peptide: Peptide::for_level(level),
             level,
-            level_idx: 6,
-            unlocked: 6,
+            level_idx: 0,
+            unlocked: 0,
 
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),

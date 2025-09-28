@@ -34,6 +34,7 @@ fn main() {
                 match screen {
                     Screen::Title => title.render(ctx),
                     Screen::Game => game.render(ctx),
+                    Screen::Win => screens::win::render(ctx),
                 }
             })
         }),
