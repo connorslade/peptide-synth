@@ -48,19 +48,18 @@ impl TitleScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
+        let (scale, pos) = title_layout(ctx, 15.0);
         Text::new(UNDEAD_FONT, "Peptide Synth")
-            .scale(Vector2::repeat(16.0))
+            .scale(Vector2::repeat(1.5 * scale.round()))
             .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
-            .position(
-                ctx.size().component_mul(&Vector2::new(0.5, 0.85)),
-                Anchor::TopCenter,
-            )
+            .position(pos, Anchor::TopCenter)
             .draw(ctx);
 
         Text::new(UNDEAD_FONT, "By Connor Slade")
             .scale(Vector2::repeat(4.0))
             .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))
             .position(Vector2::new(ctx.size().x - 16.0, 16.0), Anchor::BottomRight)
+            .color(Rgb::repeat(0.5))
             .draw(ctx);
 
         let (mut quit, mut game) = (false, false);
@@ -96,4 +95,16 @@ impl TitleScreen {
                 .draw(ctx);
         }
     }
+}
+
+fn title_layout(ctx: &GraphicsContext, max_scale: f32) -> (f32, Vector2<f32>) {
+    let size = ctx.size();
+
+    let (x_scale, y_scale) = (size.x / 160.0, size.y / 70.0);
+    let scale = (x_scale).min(y_scale).clamp(4.0, max_scale);
+
+    let y_offset = (y_scale.min(max_scale) - 3.0) * 16.0;
+    let pos = Vector2::new(size.x / 2.0, size.y - y_offset);
+
+    (scale, pos)
 }

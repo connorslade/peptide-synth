@@ -2,21 +2,19 @@ use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite},
     exports::{
         nalgebra::Vector2,
-        winit::{event::MouseButton, keyboard::KeyCode, window::CursorIcon},
+        winit::{event::MouseButton, window::CursorIcon},
     },
     graphics_context::GraphicsContext,
 };
-use rand::{rng, seq::IndexedRandom};
 
 use crate::{
-    assets::{SELECTED, include_asset},
+    assets::SELECTED,
     game::{
-        amino::{Amino, AminoType},
-        level::Level,
+        level::{LEVELS, Level},
         peptide::Peptide,
         world_to_screen,
     },
-    misc::{direction::Directions, exp_decay},
+    misc::exp_decay,
 };
 
 mod interface;
@@ -24,7 +22,8 @@ mod selection;
 
 pub struct GameScreen {
     peptide: Peptide,
-    level: Level,
+    level: &'static Level,
+    level_idx: usize,
 
     pan: Vector2<f32>,
     offset: Vector2<f32>,
@@ -35,12 +34,11 @@ pub struct GameScreen {
 
 impl GameScreen {
     pub fn new() -> Self {
-        let level = ron::de::from_bytes::<Level>(include_asset!("levels/level_5.ron")).unwrap();
-        println!("RANGE: {:?}", level.solve());
-
+        let level = &LEVELS[0];
         Self {
             peptide: Peptide::for_level(&level),
             level,
+            level_idx: 0,
 
             pan: Vector2::zeros(),
             offset: Vector2::zeros(),
@@ -50,22 +48,23 @@ impl GameScreen {
         }
     }
 
-    pub fn render(&mut self, ctx: &mut GraphicsContext) {
-        if ctx.input.key_pressed(KeyCode::Space) {
-            self.level.peptide.inner.clear();
-            self.level.peptide.inner.insert(
-                Vector2::repeat(0),
-                Amino {
-                    amino: *AminoType::ALL.choose(&mut rng()).unwrap(),
-                    children: Directions::empty(),
-                },
-            );
-            for _ in 0..10 {
-                self.level.peptide.mutate();
-            }
-            dbg!(self.level.solve());
+    pub fn load_level(&mut self, idx: usize) {
+        if idx >= LEVELS.len() {
+            return;
         }
 
+        let level = &LEVELS[idx];
+
+        self.level = level;
+        self.level_idx = idx;
+        self.peptide = Peptide::for_level(level);
+        self.pan = Vector2::zeros();
+        self.offset = Vector2::zeros();
+        self.child_idx = 0;
+        self.selected = None;
+    }
+
+    pub fn render(&mut self, ctx: &mut GraphicsContext) {
         self.interface(ctx);
 
         if ctx.input.mouse_down(MouseButton::Middle) {

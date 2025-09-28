@@ -1,15 +1,34 @@
-use std::collections::{HashSet, VecDeque};
+use std::{
+    collections::{HashSet, VecDeque},
+    sync::LazyLock,
+};
 
 use engine::{color::Rgb, exports::nalgebra::Vector2, graphics_context::GraphicsContext};
 use serde::Deserialize;
 
 use crate::{
+    assets::include_asset,
     game::{
         amino::{Amino, AminoType},
         peptide::Peptide,
     },
     misc::direction::{Direction, Directions},
 };
+
+const RAW_LEVELS: &[&[u8]] = &[
+    &*include_asset!("levels/level_1.ron"),
+    &*include_asset!("levels/level_2.ron"),
+    &*include_asset!("levels/level_3.ron"),
+    &*include_asset!("levels/level_4.ron"),
+    &*include_asset!("levels/level_5.ron"),
+];
+
+pub static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(|| {
+    RAW_LEVELS
+        .iter()
+        .map(|x| ron::de::from_bytes(*x).unwrap())
+        .collect::<Vec<_>>()
+});
 
 #[derive(Deserialize)]
 pub struct Level {
@@ -40,6 +59,41 @@ impl Level {
 }
 
 impl Level {
+    pub fn solve_p(&self) -> Peptide {
+        let mut seen = HashSet::new();
+        let mut queue = VecDeque::new();
+        queue.push_back(Peptide::for_level(self));
+
+        while let Some(peptide) = queue.pop_front() {
+            if !seen.insert(peptide.clone()) {
+                continue;
+            }
+
+            for (amino, pos, dir) in self.options(&peptide) {
+                let amino = Amino {
+                    amino,
+                    children: Directions::empty(),
+                };
+
+                let mut peptide = peptide.clone();
+                (peptide.inner.get_mut(&(pos - dir.delta())).unwrap())
+                    .children
+                    .set(dir);
+                peptide.inner.insert(pos, amino);
+                queue.push_back(peptide);
+            }
+
+            if peptide.inner.len() == self.peptide.inner.len() {
+                let score = peptide.score();
+                if score < 22.2 {
+                    return peptide;
+                }
+            }
+        }
+
+        panic!()
+    }
+
     pub fn solve(&self) -> (f32, f32) {
         let mut seen = HashSet::new();
         let mut queue = VecDeque::new();
@@ -75,7 +129,7 @@ impl Level {
             }
         }
 
-        println!("{scores:?}");
+        // println!("{scores:?}");
 
         (min, max)
     }

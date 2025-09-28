@@ -203,7 +203,16 @@ impl Peptide {
                 }
             }
 
-            energy += (amino.amino.hydrophobic() * (4 - covered_sides)) as f32;
+            // percent of non-bonded sides with neighbors
+            let bonds = amino.children.count() + self.parent(*pos).is_some() as u8;
+            if bonds < 4 {
+                let percent_cover = (covered_sides - bonds) as f32 / (4 - bonds) as f32;
+                if amino.amino.hydrophobic() > 0 {
+                    energy -= amino.amino.hydrophobic() as f32 * percent_cover;
+                } else {
+                    energy += amino.amino.hydrophobic() as f32 * (1.0 - percent_cover);
+                }
+            }
 
             // electrostatics, q₁q₂/r
             for (pos_b, amino_b) in &self.inner {

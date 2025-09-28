@@ -6,7 +6,7 @@ use crate::{
     misc::direction::{Direction, Directions},
 };
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Deserialize)]
 pub struct Amino {
     pub amino: AminoType,
     #[serde(deserialize_with = "parse_directions")]
@@ -93,11 +93,16 @@ impl AminoType {
 
     pub fn long_description(&self) -> String {
         let mut out = format!(
-            "{}\n\nCost: {}\nCharge: {}\nHydrophobic: {}\nInteractions:",
+            "{}\n\nCost: {}\nCharge: {}\n{}: {}\nInteractions:",
             self.name(),
             self.intrinsic_cost(),
             self.charge(),
-            self.hydrophobic()
+            if self.hydrophobic() < 0 {
+                "Hydrophilic"
+            } else {
+                "Hydrophobic"
+            },
+            self.hydrophobic().abs()
         );
         for (amino, cost) in self.adjacency() {
             out.push_str(&format!("\n ∙ {}: {cost}", amino.letter()));
@@ -148,16 +153,27 @@ impl AminoType {
             AminoType::Asp => &[(AminoType::Arg, -10)],
 
             // Disulfide
-            AminoType::Cys => &[(AminoType::Cys, -12)],
+            AminoType::Cys => &[
+                (AminoType::Cys, -12),
+                (AminoType::Phe, -2),
+                (AminoType::Leu, -2),
+                (AminoType::Ala, -2),
+            ],
 
             // Aromatic stacking
             AminoType::Phe => &[
                 (AminoType::Phe, -6),
                 (AminoType::Leu, -2),
                 (AminoType::Cys, -2),
+                (AminoType::Ala, -2),
             ],
 
-            AminoType::Leu => &[(AminoType::Leu, -4), (AminoType::Cys, -2)],
+            AminoType::Leu => &[
+                (AminoType::Phe, -2),
+                (AminoType::Leu, -4),
+                (AminoType::Cys, -2),
+                (AminoType::Ala, -2),
+            ],
             AminoType::Ala => &[
                 (AminoType::Leu, -2),
                 (AminoType::Phe, -2),
@@ -166,7 +182,7 @@ impl AminoType {
         }
     }
 
-    // Energy per exposed side
+    // Energy per exposed side. Positive values mean they are less stable when uncovered.
     pub fn hydrophobic(&self) -> i32 {
         match self {
             AminoType::Leu => -2,

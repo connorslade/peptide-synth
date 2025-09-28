@@ -12,7 +12,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Default, Clone, Copy, Hash, PartialEq, Eq, Serialize)]
+#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, Serialize)]
 pub struct Directions {
     inner: u8,
 }
@@ -73,6 +73,10 @@ impl Directions {
 
     pub const fn contains(&self, direction: Direction) -> bool {
         self.inner & 1 << direction as u8 != 0
+    }
+
+    pub const fn count(&self) -> u8 {
+        self.inner.count_ones() as u8
     }
 
     pub fn iter(self) -> impl Iterator<Item = Direction> + Clone {
