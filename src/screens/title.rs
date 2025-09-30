@@ -87,6 +87,7 @@ impl TitleScreen {
                             solved: false,
                             count: 0,
                             generator: None,
+                            next_generator: None,
                         })
                     })
                     .layout(ctx, layout);

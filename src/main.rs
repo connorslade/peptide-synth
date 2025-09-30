@@ -4,7 +4,7 @@ use std::mem;
 
 use engine::{
     application::{Application, ApplicationArgs},
-    exports::winit::{dpi::PhysicalSize, window::WindowAttributes},
+    exports::winit::window::WindowAttributes,
 };
 
 use crate::{
@@ -24,9 +24,7 @@ mod screens;
 
 fn main() {
     Application::new(ApplicationArgs {
-        window_attributes: WindowAttributes::default()
-            .with_title("Peptide Synth")
-            .with_inner_size(PhysicalSize::new(1920 * 3 / 4, 1080 * 3 / 4)),
+        window_attributes: WindowAttributes::default().with_title("Peptide Synth"),
         asset_constructor: Box::new(assets::init),
         resumed: Box::new(|| {
             let mut title = TitleScreen::new();

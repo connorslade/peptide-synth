@@ -31,12 +31,7 @@ const CONNECTOR_OFFSETS: [Vector2<f32>; 4] = [
     Vector2::new(6.0, 0.0),
 ];
 
-const PLACEMENT_ORDER: [Direction; 4] = [
-    Direction::Right,
-    Direction::Left,
-    Direction::Up,
-    Direction::Down,
-];
+const PLACEMENT_ORDER: [Direction; 3] = [Direction::Right, Direction::Up, Direction::Down];
 
 #[derive(Deserialize, PartialEq, Eq, Clone)]
 pub struct Peptide {

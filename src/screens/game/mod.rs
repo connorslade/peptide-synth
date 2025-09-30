@@ -40,6 +40,7 @@ pub struct GameScreen {
     selected: Option<Vector2<i32>>,
 }
 
+type Generator = Option<JoinHandle<Level>>;
 pub enum LevelStatus {
     Campaign {
         level_idx: usize,
@@ -48,7 +49,8 @@ pub enum LevelStatus {
     Random {
         solved: bool,
         count: u32,
-        generator: Option<JoinHandle<Level>>,
+        generator: Generator,
+        next_generator: Generator,
     },
 }
 
@@ -74,24 +76,22 @@ impl GameScreen {
     }
 
     pub fn randomize(&mut self) {
-        let handle = thread::spawn(Level::generate);
         if let LevelStatus::Random {
-            solved,
-            count,
             generator,
+            next_generator,
+            ..
         } = &mut self.level_status
         {
-            *solved = false;
-            *count += 1;
-            *generator = Some(handle);
-            return;
+            *generator = mem::take(next_generator);
+            *next_generator = Some(thread::spawn(Level::generate));
+        } else {
+            self.level_status = LevelStatus::Random {
+                solved: false,
+                count: 0,
+                generator: Some(thread::spawn(Level::generate)),
+                next_generator: Some(thread::spawn(Level::generate)),
+            };
         }
-
-        self.level_status = LevelStatus::Random {
-            solved: false,
-            count: 0,
-            generator: Some(handle),
-        };
     }
 
     pub fn load_level(&mut self, idx: usize) {
@@ -160,9 +160,7 @@ impl GameScreen {
         let level_origin = self.level.render(ctx, &self.peptide);
 
         let mut remove = None;
-        if let Some(pos) = hover
-            && self.selected.is_none()
-        {
+        if let Some(pos) = hover {
             let path = self.peptide.path(pos);
             if let Some(level) = self.level.peptide.find(&path) {
                 Sprite::new(SELECTED)

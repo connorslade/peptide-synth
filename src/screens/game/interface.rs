@@ -95,7 +95,18 @@ impl GameScreen {
                                             .lerp(Rgb::repeat(0.6), !solved as u8 as f32);
                                         arrow(RIGHT_ARROW, color)
                                             .on_click(ctx, || {
-                                                solved.then(|| self.randomize());
+                                                if solved {
+                                                    let old_count = match self.level_status {
+                                                        LevelStatus::Random { count, .. } => count,
+                                                        _ => 0,
+                                                    };
+                                                    self.randomize();
+                                                    if let LevelStatus::Random { count, .. } =
+                                                        &mut self.level_status
+                                                    {
+                                                        *count = old_count + 1
+                                                    }
+                                                }
                                             })
                                             .layout(ctx, layout);
                                     }
