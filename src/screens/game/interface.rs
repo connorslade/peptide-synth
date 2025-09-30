@@ -109,7 +109,12 @@ impl GameScreen {
                     });
 
                 if self.show_desc {
-                    Text::new(UNDEAD_FONT, &self.level.description)
+                    let mut desc = self.level.description.clone();
+                    if let LevelStatus::Random { count, .. } = self.level_status {
+                        desc.push_str(&format!("\nSolved: {count}"));
+                    }
+
+                    Text::new(UNDEAD_FONT, &desc)
                         .scale(Vector2::repeat(2.0))
                         .max_width(530.0)
                         .shadow(-Vector2::y(), Rgb::hex(0x5c5b6a))

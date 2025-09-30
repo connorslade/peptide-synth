@@ -85,6 +85,7 @@ impl TitleScreen {
                     .on_click(ctx, || {
                         game = Some(LevelStatus::Random {
                             solved: false,
+                            count: 0,
                             generator: None,
                         })
                     })

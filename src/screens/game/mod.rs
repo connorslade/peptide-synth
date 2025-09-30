@@ -9,7 +9,7 @@ use engine::{
     drawable::{Anchor, Drawable, sprite::Sprite, text::Text},
     exports::{
         nalgebra::Vector2,
-        winit::{event::MouseButton, keyboard::KeyCode, window::CursorIcon},
+        winit::{event::MouseButton, window::CursorIcon},
     },
     graphics_context::GraphicsContext,
 };
@@ -47,6 +47,7 @@ pub enum LevelStatus {
     },
     Random {
         solved: bool,
+        count: u32,
         generator: Option<JoinHandle<Level>>,
     },
 }
@@ -74,8 +75,21 @@ impl GameScreen {
 
     pub fn randomize(&mut self) {
         let handle = thread::spawn(Level::generate);
+        if let LevelStatus::Random {
+            solved,
+            count,
+            generator,
+        } = &mut self.level_status
+        {
+            *solved = false;
+            *count += 1;
+            *generator = Some(handle);
+            return;
+        }
+
         self.level_status = LevelStatus::Random {
             solved: false,
+            count: 0,
             generator: Some(handle),
         };
     }
@@ -109,7 +123,9 @@ impl GameScreen {
     }
 
     pub fn render(&mut self, ctx: &mut GraphicsContext) {
-        if let LevelStatus::Random { solved, generator } = &mut self.level_status
+        if let LevelStatus::Random {
+            solved, generator, ..
+        } = &mut self.level_status
             && let Some(handle) = generator
         {
             if handle.is_finished() {

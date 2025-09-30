@@ -31,6 +31,13 @@ const CONNECTOR_OFFSETS: [Vector2<f32>; 4] = [
     Vector2::new(6.0, 0.0),
 ];
 
+const PLACEMENT_ORDER: [Direction; 4] = [
+    Direction::Right,
+    Direction::Left,
+    Direction::Up,
+    Direction::Down,
+];
+
 #[derive(Deserialize, PartialEq, Eq, Clone)]
 pub struct Peptide {
     pub inner: HashMap<Vector2<i32>, Amino>,
@@ -238,33 +245,31 @@ impl Peptide {
     pub fn mutate(&mut self) {
         let mut rng = rng();
 
-        loop {
+        'outer: loop {
             let pos = *self.inner.keys().choose(&mut rng).unwrap();
-            let dir = Direction::ALL
-                .choose_weighted(&mut rng, |dir| if *dir == Direction::Right { 4 } else { 1 })
-                .unwrap();
-            let next = pos + dir.delta();
+            for dir in PLACEMENT_ORDER {
+                let next = pos + dir.delta();
+                if self.inner.contains_key(&next) {
+                    continue;
+                }
 
-            if self.inner.contains_key(&next) {
-                continue;
+                // because of my greedy path logic
+                let amino = *AminoType::ALL.choose(&mut rng).unwrap();
+                if (self.get(pos).unwrap().children.iter())
+                    .any(|x| self.get(pos + x.delta()).unwrap().amino == amino)
+                {
+                    continue;
+                }
+
+                let amino = Amino {
+                    amino,
+                    children: Directions::empty(),
+                };
+
+                self.inner.get_mut(&pos).unwrap().children.set(dir);
+                self.inner.insert(next, amino);
+                break 'outer;
             }
-
-            // because of my greedy path logic
-            let amino = *AminoType::ALL.choose(&mut rng).unwrap();
-            if (self.get(pos).unwrap().children.iter())
-                .any(|x| self.get(pos + x.delta()).unwrap().amino == amino)
-            {
-                continue;
-            }
-
-            let amino = Amino {
-                amino,
-                children: Directions::empty(),
-            };
-
-            self.inner.get_mut(&pos).unwrap().children.set(*dir);
-            self.inner.insert(next, amino);
-            break;
         }
     }
 
